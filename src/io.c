@@ -93,16 +93,17 @@ static size_t filesize(FILE *fp)
 void getinput(char* const argument, size_t const i)
 {
 	FILE *fp;
-	size_t file = i + 1;
+	size_t count = i+1;
 
 	/* Input files if address given */
 	if ((fp = fopen(argument, "r")) != NULL) {
-		folio.files[i].name = argument, folio.files[i].file = 1, folio.count = file;
+		folio.files[i].name = argument, folio.files[i].file = 1,
+			folio.count = count;
 		folio.len += folio.files[i].len = filesize(fp);
 		fclose(fp);
 	} else {
 		folio.files[i].str = argument, folio.files[i].name = "$string",
-			folio.count = file;
+			folio.count = count;
 		folio.len += folio.files[i].len = strlen(folio.files[i].str)+1;
 	}
 }
@@ -128,11 +129,16 @@ static char* readfile(Folio *folio, char* mem, size_t i)
 	return mem;
 }
 
-static char* transcribe(Folio *folio, char* mem, const char c, const size_t i)
+static char* readstring(Folio *folio, char* mem, const size_t i)
 {
-	if (c == '\n' && *(mem-1) != '\\')
-		(folio->files[i].count)++;
-	*mem++ = c;
+	size_t j;
+	char c;
+
+	for (j = 0; (c = *(folio->files[i].str+j)) != '\0'; j++) {
+		if (c == '\n' && *(mem-1) != '\\')
+			(folio->files[i].count)++;
+		*mem++ = c;
+	}
 
 	return mem;
 }
@@ -173,8 +179,7 @@ Folio loadfolio(Folio folio)
 		if (folio.files[i].file)
 			mem = readfile(&folio, mem, i);
 		else
-			for (j = 0; (c = *(folio.files[i].str+j)) != '\0'; j++)
-				mem = transcribe(&folio, mem, c, i);
+			mem = readstring(&folio, mem, i);
 
 		/* If there is no new line char in the previous place, the line
 		 * has not yet been counted; Count it. */
