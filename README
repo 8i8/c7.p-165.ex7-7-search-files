@@ -1,0 +1,45 @@
+This is the error at line io.c:150
+
+Breakpoint 1, loadfolio (folio=...) at io.c:149
+149     ind(fp);
+(gdb) c
+Continuing.
+*** Error in `/home/iain/projects/knr/c7.p-165.ex7-7-search-files/src/a.out': free(): invalid next size (normal): 0x00000000006903f0 ***
+======= Backtrace: =========
+/lib/x86_64-linux-gnu/libc.so.6(+0x777e5)[0x7ffff7a847e5]
+/lib/x86_64-linux-gnu/libc.so.6(+0x8037a)[0x7ffff7a8d37a]
+/lib/x86_64-linux-gnu/libc.so.6(cfree+0x4c)[0x7ffff7a9153c]
+/lib/x86_64-linux-gnu/libc.so.6(_IO_setb+0x4b)[0x7ffff7a8854b]
+/lib/x86_64-linux-gnu/libc.so.6(_IO_file_close_it+0xae)[0x7ffff7a868ee]
+/lib/x86_64-linux-gnu/libc.so.6(fclose+0x18f)[0x7ffff7a7a3ef]
+/home/iain/projects/knr/c7.p-165.ex7-7-search-files/src/a.out[0x401254]
+/home/iain/projects/knr/c7.p-165.ex7-7-search-files/src/a.out[0x400b4a]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0)[0x7ffff7a2d830]
+/home/iain/projects/knr/c7.p-165.ex7-7-search-files/src/a.out[0x4009c9]
+======= Memory map: ========
+00400000-00404000 r-xp 00000000 00:2d 20058410                           /home/iain/projects/knr/c7.p-165.ex7-7-search-files/src/a.out (deleted)
+00603000-00604000 r--p 00003000 00:2d 20058410                           /home/iain/projects/knr/c7.p-165.ex7-7-search-files/src/a.out (deleted)
+00604000-00605000 rw-p 00004000 00:2d 20058410                           /home/iain/projects/knr/c7.p-165.ex7-7-search-files/src/a.out (deleted)
+00605000-006b1000 rw-p 00000000 00:00 0                                  [heap]
+7ffff0000000-7ffff0021000 rw-p 00000000 00:00 0
+7ffff0021000-7ffff4000000 ---p 00000000 00:00 0
+7ffff77f7000-7ffff780d000 r-xp 00000000 08:05 4985299                    /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffff780d000-7ffff7a0c000 ---p 00016000 08:05 4985299                    /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffff7a0c000-7ffff7a0d000 rw-p 00015000 08:05 4985299                    /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffff7a0d000-7ffff7bcd000 r-xp 00000000 08:05 4986203                    /lib/x86_64-linux-gnu/libc-2.23.so
+7ffff7bcd000-7ffff7dcd000 ---p 001c0000 08:05 4986203                    /lib/x86_64-linux-gnu/libc-2.23.so
+7ffff7dcd000-7ffff7dd1000 r--p 001c0000 08:05 4986203                    /lib/x86_64-linux-gnu/libc-2.23.so
+7ffff7dd1000-7ffff7dd3000 rw-p 001c4000 08:05 4986203                    /lib/x86_64-linux-gnu/libc-2.23.so
+7ffff7dd3000-7ffff7dd7000 rw-p 00000000 00:00 0
+7ffff7dd7000-7ffff7dfd000 r-xp 00000000 08:05 4985216                    /lib/x86_64-linux-gnu/ld-2.23.so
+7ffff7fd4000-7ffff7fd7000 rw-p 00000000 00:00 0
+7ffff7ff5000-7ffff7ff8000 rw-p 00000000 00:00 0
+7ffff7ff8000-7ffff7ffa000 r--p 00000000 00:00 0                          [vvar]
+7ffff7ffa000-7ffff7ffc000 r-xp 00000000 00:00 0                          [vdso]
+7ffff7ffc000-7ffff7ffd000 r--p 00025000 08:05 4985216                    /lib/x86_64-linux-gnu/ld-2.23.so
+7ffff7ffd000-7ffff7ffe000 rw-p 00026000 08:05 4985216                    /lib/x86_64-linux-gnu/ld-2.23.so
+7ffff7ffe000-7ffff7fff000 rw-p 00000000 00:00 0
+7ffffffde000-7ffffffff000 rw-p 00000000 00:00 0                          [stack]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+Program received signal SIGABRT, Aborted.
+0x00007ffff7a42428 in __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:54
