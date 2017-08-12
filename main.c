@@ -6,9 +6,6 @@
  */
 #include "search-files.h"
 
-/*
- * Sort input lines.
- */
 int main(int argc, char *argv[])
 {
 	//size_t i;
@@ -16,7 +13,6 @@ int main(int argc, char *argv[])
 	if (argc > 1)
 		settings(argc, argv);
 
-	/* If no files are supplied, fill lineptr array from stdin. */
 	if (folio.count)
 		folio = loadfolio(folio);
 	else
@@ -60,8 +56,9 @@ int main(int argc, char *argv[])
 }
 
 /*
- * settings:	If the argument is preceded by '-' it is a flag else it is a
- * string, in which case it is sent to getinput() to be oped or recorded.
+ * settings:	If the argument is preceded by '-' it is a flag, program state
+ * is set accordingly else it is either a string or a file, in which case it is
+ * sent to getinput().
  */
 size_t settings(int argc, char*argv[])
 {
@@ -79,7 +76,7 @@ size_t settings(int argc, char*argv[])
 }
 
 /*
- * sortsection:	Switch, selects the sort function for qsort.
+ * sortsection:	Switch, selects the sort function for qsort, see program states.
  */
 void sortsection(char *lineptr[], int left, int right, int func, int ntab)
 {

@@ -14,6 +14,17 @@ static char *alloc(size_t);
 
 /*
  * getflags:	Get flag arguments for program settings.
+ *
+ * input arguments:
+ *
+ * 	-d, directory sort
+ * 	-e, remove blank lines
+ *	-f, fold lower case to upper case characters
+ *	-i, compile for inex
+ *	-n, numerical sort
+ *	-p, no sort
+ *	-r, reverse sort
+ *	-s, basic string compare
  */
 void getflags(int argc, char*argv[])
 {
@@ -76,7 +87,8 @@ static size_t filesize(FILE *fp)
 }
 
 /*
- * getinput:	Get files from supplied arguments.
+ * getinput:	Input files from supplied arguments and count the length of the
+ * total input for later use in memory assignment.
  */
 void getinput(char* const argument, size_t const i)
 {
@@ -96,8 +108,8 @@ void getinput(char* const argument, size_t const i)
 }
 
 /*
- * readfile:	Transfer input form string/file to memory, count end of line
- *		charecters whilst doing so.
+ * readfile:	Transfer input form file to memory, count end of line
+ * characters whilst doing so.
  */
 static char* readfile(Folio *folio, char* mem, size_t i)
 {
