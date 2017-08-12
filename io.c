@@ -96,9 +96,26 @@ void getinput(char* const argument, size_t const file)
 }
 
 /*
- * transcribe:	Transfer input form string/file to memory, count end of line
+ * readfile:	Transfer input form string/file to memory, count end of line
  *		charecters whilst doing so.
  */
+static char* readfile(Folio *folio, char* mem, size_t i)
+{
+	FILE *fp;
+	char c;
+	fp = fopen(folio->files[i].name, "r");
+
+	while ((c = getc(fp)) != EOF) {
+		if (c == '\n' && *(mem-1) != '\\')
+			(folio->files[i].count)++;
+		*mem++ = c;
+	}
+
+	fclose(fp);
+
+	return mem;
+}
+
 static char* transcribe(Folio *folio, char* mem, const char c, const size_t i)
 {
 	if (c == '\n' && *(mem-1) != '\\')
@@ -125,7 +142,6 @@ static void remove_n(Folio *folio, char* mem, const size_t i, size_t *j, size_t 
  */
 Folio loadfolio(Folio folio)
 {
-	FILE *fp;
 	size_t i, j, k;
 	char c;
 	char *mem, *mark;
@@ -142,13 +158,9 @@ Folio loadfolio(Folio folio)
 	for (i = 0; i < folio.count; i++)
 	{
 		/* Count \n's and transcribe form source to memory. */
-		if (folio.files[i].file) {
-			fp = fopen(folio.files[i].name, "r");
-				while ((c = getc(fp)) != EOF)
-					mem = transcribe(&folio, mem, c, i);
-			rewind(fp);
-			fclose(fp);
-		} else
+		if (folio.files[i].file)
+			mem = readfile(&folio, mem, i);
+		else
 			for (j = 0; (c = *(folio.files[i].str+j)) != '\0'; j++)
 				mem = transcribe(&folio, mem, c, i);
 
