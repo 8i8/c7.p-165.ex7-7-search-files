@@ -78,10 +78,10 @@ static size_t filesize(FILE *fp)
 /*
  * getinput:	Get files from supplied arguments.
  */
-void getinput(char* const argument, size_t const file)
+void getinput(char* const argument, size_t const i)
 {
 	FILE *fp;
-	size_t i = file-1;
+	size_t file = i + 1;
 
 	/* Input files if address given */
 	if ((fp = fopen(argument, "r")) != NULL) {

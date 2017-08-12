@@ -74,7 +74,7 @@ size_t settings(int argc, char*argv[])
 		if (*argv[i] == '-')
 			getflags(i, argv);
 		else
-			getinput(argv[i], ++file);
+			getinput(argv[i], file++);
 	return file;
 }
 
