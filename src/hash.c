@@ -4,8 +4,6 @@
 #include "search-files.h"
 #include <string.h>
 
-#define DOUBLES		1000
-
 #define P1 		317		/* prime smaller than s^16/200 */
 #define P2 		65521		/* prime smaller than 2^16 */
 #define P3		281539415969051	/* prime smaller than 2^64/65521 */

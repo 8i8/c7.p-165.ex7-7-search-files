@@ -20,7 +20,7 @@ static char *alloc(size_t);
  * 	-d, directory sort
  * 	-e, remove blank lines
  *	-f, fold lower case to upper case characters
- *	-i, compile for inex
+ *	-i, compile for index
  *	-n, numerical sort
  *	-p, no sort
  *	-r, reverse sort
@@ -115,15 +115,15 @@ void getinput(char* const argument, size_t const i)
 static char* readfile(Folio *folio, char* mem, size_t i)
 {
 	FILE *fp;
-	char c;
+	int c;
 	fp = fopen(folio->files[i].name, "r");
 
 	while ((c = getc(fp)) != EOF) {
 		if (c == '\n' && *(mem-1) != '\\')
 			(folio->files[i].count)++;
-		*mem++ = c;
+		*mem++ = (char)c;
 	}
-
+	*mem++ = '\0';
 	fclose(fp);
 
 	return mem;
@@ -184,7 +184,7 @@ Folio loadfolio(Folio folio)
 		/* If there is no new line char in the previous place, the line
 		 * has not yet been counted; Count it. */
 		if(*(mem-1) != '\n')
-			(folio.files[i].count)++, *mem++ = '\0';
+			(folio.files[i].count)++;
 
 		/* Mark the end of the current input and then reset to start. */
 		mark = mem;
@@ -193,7 +193,7 @@ Folio loadfolio(Folio folio)
 		/* allocate an array of pointers to structs, one for each line
 		 * of text; Iterate through the file replacing each end of line
 		 * marker with the NUL terminator */
-		if ((folio.files[i].lines = (Line*)malloc(folio.files[i].count*sizeof(Line))) == NULL)
+		if ((folio.files[i].lines = (Line*)malloc(folio.files[i].count*(sizeof(Line*)+sizeof(Line)))) == NULL)
 			printf("error:	malloc failed to assign memory in loadfolio(), lines\n");
 
 		/* Set the first structs string to current memory position. */
@@ -201,8 +201,12 @@ Folio loadfolio(Folio folio)
 
 		/* Exchange all instances of '\n' for '\0' */
 		for (j = 0, k = 0; (c = *mem++) != '\0'; k++)
-			if (c == '\n' && *(mem-1) != '\\')
+			if (c == '\n' && *(mem-1) != '\\') {
 				remove_n(&folio, mem, i, &j, &k);
+				//folio.files[i].lines[j].len = k;
+				//folio.files[i].lines[++j].line = mem, *(mem-1) = '\0';
+				//k = 0;
+			}
 
 		/* Set all markers to start of next memory block */
 		mem = folio.memory = mark;
