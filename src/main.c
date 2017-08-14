@@ -20,9 +20,10 @@ int main(int argc, char *argv[])
 	
 	folio = hashtable(folio);
 	//printtest(folio);
+	writelines(lineptr, pt);
 
 	/* Sort input */
-	//sortsection(lineptr, 0, pt, state.func, 0);
+	//sortsection((void**)lineptr, 0, pt, state.func, 0);
 	
 	///* If required add line spacers. */
 	//if (state.directory)
@@ -46,11 +47,6 @@ int main(int argc, char *argv[])
 	//	if (state.directory)
 	//		pt = addspacer(lineptr, MAXLINES, pt, i-1);
 	//}
-
-	/*
-	 * Output to terminal.
-	 */
-	writelines(lineptr, pt);
 
 	return 0;
 }
@@ -78,17 +74,17 @@ size_t settings(int argc, char*argv[])
 /*
  * sortsection:	Switch, selects the sort function for qsort, see program states.
  */
-void sortsection(char *lineptr[], int left, int right, int func, int ntab)
+void sortsection(void *lineptr[], int left, int right, int func, int ntab)
 {
 	switch (func) {
 		case simple:
-			_qsort((void **) lineptr, left, right, strsimp, ntab);
+			_qsort((void**)lineptr, left, right, strsimp, ntab);
 			break;
 		case alpha:
-			_qsort((void **) lineptr, left, right, stnsort, ntab);
+			_qsort((void**)lineptr, left, right, stnsort, ntab);
 			break;
 		case fold:
-			_qsort((void **) lineptr, left, right, strfold, ntab);
+			_qsort((void**)lineptr, left, right, strfold, ntab);
 			break;
 		case nosort:
 			break;
