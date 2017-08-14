@@ -56,7 +56,7 @@ typedef struct line Line;
 
 struct file {
 	unsigned char *str;
-	Line *lines;
+	Line **lines;
 	unsigned char *name;
 	size_t count;
 	size_t len;
