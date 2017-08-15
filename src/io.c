@@ -129,6 +129,9 @@ static unsigned char* readfile(Folio *folio, unsigned char* mem, size_t i)
 	return mem;
 }
 
+/*
+ * readstring:	Copy argument string into folio memory block.
+ */
 static unsigned char* readstring(Folio *folio, unsigned char* mem, const size_t i)
 {
 	size_t j;
@@ -151,6 +154,7 @@ static unsigned char* readstring(Folio *folio, unsigned char* mem, const size_t 
 static void defline(Folio *folio, unsigned char* mem, const size_t i, size_t *j, size_t *k)
 {
 	folio->files[i].lines[*j][0].line = mem+1;
+	folio->files[i].lines[*j][0].next = NULL;
 	folio->files[i].lines[*j][0].isTrue = 0;
 	folio->files[i].lines[(*j)++][0].len = *k;
 	*k = 0;
@@ -160,20 +164,18 @@ static void defline(Folio *folio, unsigned char* mem, const size_t i, size_t *j,
 /*
  * alloclines:	 Memory for Line pointer array and structs.
  */
-static Folio alloclines(Folio folio, size_t i)
+static void alloclines(Folio *folio, size_t i)
 {
 	size_t j;
 
 	/* allocate an array of pointers to structs, one for each line of text */
-	if ((folio.files[i].lines = malloc(folio.files[i].count*(sizeof(Line*)))) == NULL)
+	if ((folio->files[i].lines = malloc(folio->files[i].count*(sizeof(Line*)))) == NULL)
 		printf("error:	malloc failed to assign memory in alloclines(), Line**\n");
 
 	/* Allocat the memory for the structs them selves. */
-	for (j = 0; j < folio.files[i].count; j++)
-		if ((folio.files[i].lines[j] = malloc(sizeof(Line))) == NULL)
+	for (j = 0; j < folio->files[i].count; j++)
+		if ((folio->files[i].lines[j] = malloc(sizeof(Line))) == NULL)
 			printf("error:	malloc failed to assign memory in alloclines(), Line\n");
-
-	return folio;
 }
 
 /*
@@ -181,58 +183,56 @@ static Folio alloclines(Folio folio, size_t i)
  * contents, or the string, into an array of pointers; Use one string for each
  * line.
  */
-Folio loadfolio(Folio folio)
+void loadfolio(Folio *folio)
 {
 	size_t i, j, k;
 	char c;
 	unsigned char *mem, *mark;
 
 	/* Request required memory for all strings*/
-	if ((folio.memory = malloc(folio.len_t*sizeof(char))) == NULL)
+	if ((folio->memory = malloc(folio->len_t*sizeof(char))) == NULL)
 		printf("error:	malloc failed to assign memory in loadfolio(), memory\n");
 
 	/* set pointer to start of memory block */
-	mem = folio.memory;
+	mem = folio->memory;
 
 	/* Copy each file onto allocated memory, set each entry point and count
 	 * new line char */
-	for (i = 0; i < folio.file_t; i++)
+	for (i = 0; i < folio->file_t; i++)
 	{
 		/* Count \n's and transcribe form source to memory. */
-		if (folio.files[i].file)
-			mem = readfile(&folio, mem, i);
+		if (folio->files[i].file)
+			mem = readfile(folio, mem, i);
 		else
-			mem = readstring(&folio, mem, i);
+			mem = readstring(folio, mem, i);
 
 		/* If there is no new line char in the previous place, the line
 		 * has not yet been counted; Count it. */
 		if(*(mem-2) != '\n')
-			(folio.files[i].count)++;
+			(folio->files[i].count)++;
 
 		/* Mark the end of the current input and then reset to start. */
 		mark = mem;
-		mem = folio.memory;
+		mem = folio->memory;
 
 		/* Memory for pointer array and structs */
-		folio = alloclines(folio, i);
+		alloclines(folio, i);
 
 		/* Set the first structs string to current memory position. */
-		folio.files[i].lines[0][0].line = mem;
+		folio->files[i].lines[0][0].line = mem;
 
 		/* Iterate through each file, replacing end of line marker with
 		 * the NUL terminator. */
 		for (j = 0, k = 0; (c = *mem) != '\0'; mem++, k++)
 			if (c == '\n' && *(mem-1) != '\\')
-				defline(&folio, mem, i, &j, &k);
+				defline(folio, mem, i, &j, &k);
 
 		/* Add the file linecount to the total line count. */
-		folio.line_t += folio.files[i].count;
+		folio->line_t += folio->files[i].count;
 
 		/* Set all markers to start of next memory block */
-		mem = folio.memory = mark;
+		mem = folio->memory = mark;
 	}
-
-	return folio;
 }
 
 /*

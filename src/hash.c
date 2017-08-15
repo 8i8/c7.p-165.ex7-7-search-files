@@ -4,6 +4,9 @@
 #include "search-files.h"
 #include <string.h>
 
+#include <ctype.h>
+#include <assert.h>
+
 #define P1 		317		/* prime smaller than s^16/200 */
 #define P2 		65521		/* prime smaller than 2^16 */
 #define P3		281539415969051	/* prime smaller than 2^64/65521 */
@@ -35,44 +38,53 @@ static Line *lookup(unsigned char *s)
 	Line *ln;
 
 	for (ln = hashtab[hash(s)]; ln != NULL; ln = ln->next)
-		if (strcmp((char*)s, (char*)ln->line) == 0)
+		if (strcmp((char*)s, (char*)ln->line) == 0) {
+			assert(isprint(ln->line[0]));
 			return ln;
+		}
 
 	return NULL;
 }
 
 /*
- * install:	link line structs to hash bucket.
+ * makenode:	Check if the lines hash halready has a node, if it does link to
+ * it, if not then start a new branch.
  */
-Folio hashtable(Folio folio)
+static void makenode(Folio *folio, const size_t i, const size_t j)
 {
-	size_t i, j;
 	Line *ln;
 	unsigned hashval;
 
-	for (i = 0; i < folio.file_t; i++) {
-		for (j = 0; j < folio.files[i].count; j++)
+	if ((ln = lookup(folio->files[i].lines[j][0].line)) != NULL)
+	{
+		ln->next = &folio->files[i].lines[j][0];
+		if (!ln->isTrue)
+			lineptr[pt++] = ln->line;
+		lineptr[pt++] = folio->files[i].lines[j][0].line;
+		ln->isTrue = folio->files[i].lines[j][0].isTrue = true;
+	} else {
+		hashval = hash(folio->files[i].lines[j][0].line);
+		/* Move existing struct link, if value present, to the current struct */
+		folio->files[i].lines[j][0].next = hashtab[hashval];
+		/* Put new struct into hash bucket first position */
+		hashtab[hashval] = &folio->files[i].lines[j][0];
+	}
+}
+
+/*
+ * install:	link line structs to hash bucket.
+ */
+void hashtable(Folio *folio)
+{
+	size_t i, j;
+
+	for (i = 0; i < folio->file_t; i++) {
+		for (j = 0; j < folio->files[i].count; j++)
 		{
-			if ((ln = lookup(folio.files[i].lines[j][0].line)) != NULL)
-			{
-				ln->next = &folio.files[i].lines[j][0];
-				/* If the line is not blank, then ... */
-				if (folio.files[i].lines[j][0].line[0] != '\0') {
-					if (!ln->isTrue)
-						lineptr[pt++] = ln->line;
-					lineptr[pt++] = folio.files[i].lines[j][0].line;
-					ln->isTrue = folio.files[i].lines[j][0].isTrue = true;
-				}
-			} else {
-				hashval = hash(folio.files[i].lines[j][0].line);
-				/* Move existing struct link, if value present, to the current struct */
-				folio.files[i].lines[j][0].next = hashtab[hashval];
-				/* Put new struct into hash bucket first position */
-				hashtab[hashval] = &folio.files[i].lines[j][0];
+			if (folio->files[i].lines[j][0].line[0] != '\0') {
+				makenode(folio, i, j);
 			}
 		}
 	}
-
-	return folio;
 }
 

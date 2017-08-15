@@ -87,7 +87,7 @@ void resetglobals(void);
 /* i/o */
 void getflags(int argc, char*argv[]);
 void getinput(char* const argument, size_t const file);
-Folio loadfolio(Folio folio);
+void loadfolio(Folio *folio);
 size_t readlines(unsigned char *lineptr[], size_t maxlines);
 void printhash(unsigned char **lines, size_t lp);
 size_t deleteline(unsigned char *lineptr[], int line, size_t nlines);
@@ -96,7 +96,7 @@ size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines
 void printfolio(Folio folio);
 
 /* Hash table */
-Folio hashtable(Folio folio);
+void hashtable(Folio *folio);
 
 /* Sort */
 void _qsort(void *lineptr[], int left, int right, compar fn, int ntab);
