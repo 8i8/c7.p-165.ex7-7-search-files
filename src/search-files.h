@@ -68,8 +68,9 @@ typedef struct file File;
 typedef struct {
 	File files[MAXFILES];
 	unsigned char *memory;
-	size_t count;
-	size_t len;
+	size_t file_t;
+	size_t line_t;
+	size_t len_t;
 } Folio;
 
 extern State state;
@@ -88,11 +89,11 @@ void getflags(int argc, char*argv[]);
 void getinput(char* const argument, size_t const file);
 Folio loadfolio(Folio folio);
 size_t readlines(unsigned char *lineptr[], size_t maxlines);
-void writelines(unsigned char **lines, size_t lp);
+void printhash(unsigned char **lines, size_t lp);
 size_t deleteline(unsigned char *lineptr[], int line, size_t nlines);
 void settabs(char n[]);
 size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines, size_t index, size_t nlines);
-void printtest(Folio folio);
+void printfolio(Folio folio);
 
 /* Hash table */
 Folio hashtable(Folio folio);

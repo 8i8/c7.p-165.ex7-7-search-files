@@ -13,14 +13,14 @@ int main(int argc, char *argv[])
 	if (argc > 1)
 		settings(argc, argv);
 
-	if (folio.count)
+	if (folio.file_t)
 		folio = loadfolio(folio);
 	else
 		printf("usage:	%s <file1> <file2>\n", *argv);
 	
-	folio = hashtable(folio);
-	//printtest(folio);
-	writelines(lineptr, pt);
+	printfolio(folio);
+	//folio = hashtable(folio);
+	//printhash(lineptr, pt);
 
 	/* Sort input */
 	//sortsection((void**)lineptr, 0, pt, state.func, 0);

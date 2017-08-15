@@ -27,6 +27,7 @@ Folio folio = { { {
 	NULL,
 	0,
 	0,
+	0,
 };
 
 Line lines = {

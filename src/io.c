@@ -98,13 +98,13 @@ void getinput(char* const argument, size_t const i)
 	/* Input files if address given */
 	if ((fp = fopen(argument, "r")) != NULL) {
 		folio.files[i].name = (unsigned char*)argument, folio.files[i].file = 1,
-			folio.count = count;
-		folio.len += folio.files[i].len = filesize(fp);
+			folio.file_t = count;
+		folio.len_t += folio.files[i].len = filesize(fp);
 		fclose(fp);
 	} else {
 		folio.files[i].str = (unsigned char*)argument, folio.files[i].name = (unsigned char*)"$string",
-			folio.count = count;
-		folio.len += folio.files[i].len = strlen((char*)folio.files[i].str)+1;
+			folio.file_t = count;
+		folio.len_t += folio.files[i].len = strlen((char*)folio.files[i].str)+1;
 	}
 }
 
@@ -150,11 +150,30 @@ static unsigned char* readstring(Folio *folio, unsigned char* mem, const size_t 
  */
 static void defline(Folio *folio, unsigned char* mem, const size_t i, size_t *j, size_t *k)
 {
-	folio->files[i].lines[*j].line = mem+1;
-	folio->files[i].lines[*j].isTrue = 0;
-	folio->files[i].lines[(*j)++].len = *k;
+	folio->files[i].lines[*j][0].line = mem+1;
+	folio->files[i].lines[*j][0].isTrue = 0;
+	folio->files[i].lines[(*j)++][0].len = *k;
 	*k = 0;
 	*mem = '\0';
+}
+
+/*
+ * alloclines:	 Memory for Line pointer array and structs.
+ */
+static Folio alloclines(Folio folio, size_t i)
+{
+	size_t j;
+
+	/* allocate an array of pointers to structs, one for each line of text */
+	if ((folio.files[i].lines = malloc(folio.files[i].count*(sizeof(Line*)))) == NULL)
+		printf("error:	malloc failed to assign memory in alloclines(), Line**\n");
+
+	/* Allocat the memory for the structs them selves. */
+	for (j = 0; j < folio.files[i].count; j++)
+		if ((folio.files[i].lines[j] = malloc(sizeof(Line))) == NULL)
+			printf("error:	malloc failed to assign memory in alloclines(), Line\n");
+
+	return folio;
 }
 
 /*
@@ -168,8 +187,8 @@ Folio loadfolio(Folio folio)
 	char c;
 	unsigned char *mem, *mark;
 
-	/* Request required memory */
-	if ((folio.memory = malloc(folio.len*sizeof(char))) == NULL)
+	/* Request required memory for all strings*/
+	if ((folio.memory = malloc(folio.len_t*sizeof(char))) == NULL)
 		printf("error:	malloc failed to assign memory in loadfolio(), memory\n");
 
 	/* set pointer to start of memory block */
@@ -177,7 +196,7 @@ Folio loadfolio(Folio folio)
 
 	/* Copy each file onto allocated memory, set each entry point and count
 	 * new line char */
-	for (i = 0; i < folio.count; i++)
+	for (i = 0; i < folio.file_t; i++)
 	{
 		/* Count \n's and transcribe form source to memory. */
 		if (folio.files[i].file)
@@ -194,19 +213,20 @@ Folio loadfolio(Folio folio)
 		mark = mem;
 		mem = folio.memory;
 
-		/* allocate an array of pointers to structs, one for each line
-		 * of text; Iterate through the file replacing each end of line
-		 * marker with the NUL terminator */
-		if ((folio.files[i].lines = malloc(folio.files[i].count*(sizeof(Line*)+sizeof(Line)))) == NULL)
-			printf("error:	malloc failed to assign memory in loadfolio(), lines\n");
+		/* Memory for pointer array and structs */
+		folio = alloclines(folio, i);
 
 		/* Set the first structs string to current memory position. */
-		folio.files[i].lines[0].line = mem;
+		folio.files[i].lines[0][0].line = mem;
 
-		/* Exchange all instances of '\n' for '\0' */
+		/* Iterate through each file, replacing end of line marker with
+		 * the NUL terminator. */
 		for (j = 0, k = 0; (c = *mem) != '\0'; mem++, k++)
 			if (c == '\n' && *(mem-1) != '\\')
 				defline(&folio, mem, i, &j, &k);
+
+		/* Add the file linecount to the total line count. */
+		folio.line_t += folio.files[i].count;
 
 		/* Set all markers to start of next memory block */
 		mem = folio.memory = mark;
@@ -371,9 +391,9 @@ void settabs(char n[])
 }
 
 /*
- * writelines:	Write output.
+ * printhash:	Write output.
  */
-void writelines(unsigned char **lines, size_t lp)
+void printhash(unsigned char **lines, size_t lp)
 {
 	size_t i;
 
@@ -385,9 +405,9 @@ void writelines(unsigned char **lines, size_t lp)
 }
 
 /*
- * writelines:	Write output.
+ * printhash:	Write output.
  */
-void writelinesstruct(Line **lines, size_t lp)
+void printhashstruct(Line **lines, size_t lp)
 {
 	size_t i;
 
@@ -399,16 +419,16 @@ void writelinesstruct(Line **lines, size_t lp)
 }
 
 /*
- * printtest:	Basic test of folio struct data.
+ * printfolio:	Basic test of folio struct data.
  */
-void printtest(Folio folio)
+void printfolio(Folio folio)
 {
 	size_t i, j;
 
-	for (i = 0; i < folio.count; i++)
+	for (i = 0; i < folio.file_t; i++)
 		for (j = 0; j < folio.files[i].count; j++)
 			//if (folio.files[i].lines[j].isTrue)
 				printf("%s:%3lu: %s\n", folio.files[i].name, j+1,
-						folio.files[i].lines[j].line);
+						folio.files[i].lines[j][0].line);
 }
 

@@ -34,10 +34,9 @@ static Line *lookup(unsigned char *s)
 {
 	Line *ln;
 
-	for (ln = hashtab[hash(s)]; ln != NULL; ln = ln->next) {
+	for (ln = hashtab[hash(s)]; ln != NULL; ln = ln->next)
 		if (strcmp((char*)s, (char*)ln->line) == 0)
 			return ln;
-	}
 
 	return NULL;
 }
@@ -51,25 +50,25 @@ Folio hashtable(Folio folio)
 	Line *ln;
 	unsigned hashval;
 
-	for (i = 0; i < folio.count; i++) {
+	for (i = 0; i < folio.file_t; i++) {
 		for (j = 0; j < folio.files[i].count; j++)
 		{
-			if ((ln = lookup(folio.files[i].lines[j].line)) != NULL)
+			if ((ln = lookup(folio.files[i].lines[j][0].line)) != NULL)
 			{
-				ln->next = &folio.files[i].lines[j];
+				ln->next = &folio.files[i].lines[j][0];
 				/* If the line is not blank, then ... */
-				if (folio.files[i].lines[j].line[0] != '\0') {
+				if (folio.files[i].lines[j][0].line[0] != '\0') {
 					if (!ln->isTrue)
 						lineptr[pt++] = ln->line;
-					lineptr[pt++] = folio.files[i].lines[j].line;
-					ln->isTrue = folio.files[i].lines[j].isTrue = true;
+					lineptr[pt++] = folio.files[i].lines[j][0].line;
+					ln->isTrue = folio.files[i].lines[j][0].isTrue = true;
 				}
 			} else {
-				hashval = hash(folio.files[i].lines[j].line);
+				hashval = hash(folio.files[i].lines[j][0].line);
 				/* Move existing struct link, if value present, to the current struct */
-				folio.files[i].lines[j].next = hashtab[hashval];
+				folio.files[i].lines[j][0].next = hashtab[hashval];
 				/* Put new struct into hash bucket first position */
-				hashtab[hashval] = &folio.files[i].lines[j];
+				hashtab[hashval] = &folio.files[i].lines[j][0];
 			}
 		}
 	}
