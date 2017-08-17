@@ -13,19 +13,17 @@ int main(int argc, char *argv[])
 	if (argc > 1)
 		settings(argc, argv);
 
-	if (folio.file_t)
+	if (folio.t_file)
 		loadfolio(&folio);
 	else
 		printf("usage:	%s <file1> <file2>\n", *argv);
 	
-	//printfolio(folio);
 	hashtable(&folio);
-	printhash(lineptr, pt);
 
 	/* Sort input */
-	//sortsection((void**)lineptr, 0, pt, state.func, 0);
+	sortsection((void**)lineptr, 0, pt-1, state.func, 0);
 	
-	///* If required add line spacers. */
+	///* If required, add line spacers. */
 	//if (state.directory)
 	//	pt = addspacer(lineptr, MAXLINES, pt, 0);
 
@@ -48,6 +46,9 @@ int main(int argc, char *argv[])
 	//		pt = addspacer(lineptr, MAXLINES, pt, i-1);
 	//}
 
+	printfolio(folio);
+	//printhash(lineptr, pt);
+
 	return 0;
 }
 
@@ -56,19 +57,17 @@ int main(int argc, char *argv[])
  * is set accordingly else it is either a string or a file, in which case it is
  * sent to getinput().
  */
-size_t settings(int argc, char*argv[])
+void settings(int argc, char*argv[])
 {
-	size_t file, i;
-	file = i = 0;
+	size_t i;
 
 	resetglobals();
 
 	for (i = 1; i < (unsigned)argc; i++)
 		if (*argv[i] == '-')
 			getflags(i, argv);
-		else
-			getinput(argv[i], file++);
-	return file;
+
+	getinput(&folio, argc, argv);
 }
 
 /*

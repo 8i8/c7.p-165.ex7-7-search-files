@@ -11,7 +11,7 @@
 #define P2 		65521		/* prime smaller than 2^16 */
 #define P3		281539415969051	/* prime smaller than 2^64/65521 */
 
-static Line *hashtab[P2];
+static struct Line *hashtab[P2];
 
 /*
  * hash:	form hash value for string s
@@ -33,9 +33,9 @@ static unsigned long hash(unsigned char *s)
 /*
  * lookup:	Look for s in hashtab
  */
-static Line *lookup(unsigned char *s)
+static struct Line *lookup(unsigned char *s)
 {
-	Line *ln;
+	struct Line *ln;
 
 	for (ln = hashtab[hash(s)]; ln != NULL; ln = ln->next)
 		if (strcmp((char*)s, (char*)ln->line) == 0) {
@@ -50,9 +50,9 @@ static Line *lookup(unsigned char *s)
  * makenode:	Check if the lines hash halready has a node, if it does link to
  * it, if not then start a new branch.
  */
-static void makenode(Folio *folio, const size_t i, const size_t j)
+static void makenode(struct Folio *folio, const size_t i, const size_t j)
 {
-	Line *ln;
+	struct Line *ln;
 	unsigned hashval;
 
 	if ((ln = lookup(folio->files[i].lines[j][0].line)) != NULL)
@@ -74,12 +74,12 @@ static void makenode(Folio *folio, const size_t i, const size_t j)
 /*
  * install:	link line structs to hash bucket.
  */
-void hashtable(Folio *folio)
+void hashtable(struct Folio *folio)
 {
 	size_t i, j;
 
-	for (i = 0; i < folio->file_t; i++) {
-		for (j = 0; j < folio->files[i].count; j++)
+	for (i = 0; i < folio->t_file; i++) {
+		for (j = 0; j < folio->files[i].f_count; j++)
 		{
 			if (folio->files[i].lines[j][0].line[0] != '\0') {
 				makenode(folio, i, j);

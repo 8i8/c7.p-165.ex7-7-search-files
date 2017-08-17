@@ -4,37 +4,24 @@
 #include "search-files.h"
 
 /* main:	state for program functions */
-State state = {
+struct State state = {
+	alpha,
 	false,
 	false,
 	false,
 	false,
 	false,
 	false,
-	false,
-	alpha
+	false
 };
 
 /* main:	portfolio of file input */
-Folio folio = { { {
-		NULL,
-		NULL,
-		NULL,
-		0,
-		0,
-		0
-	} },
-	NULL,
-	0,
-	0,
-	0,
-};
-
-Line lines = {
+struct Folio folio = {
 	NULL,
 	NULL,
 	0,
 	0,
+	0
 };
 
 /*

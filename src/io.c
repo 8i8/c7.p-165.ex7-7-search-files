@@ -3,7 +3,6 @@
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "search-files.h"
 #include <string.h>
-#include <stdint.h>
 
 unsigned char *lineptr[MAXLINES];		/* Pointer to text lines */
 static unsigned char allocbuf[ALLOCSIZE];	/* Storage for alloc */
@@ -29,8 +28,9 @@ static unsigned char *alloc(size_t);
 void getflags(int argc, char*argv[])
 {
 	int c;
+	size_t i = 0;
 
-	while ((c = *++argv[argc])) {
+	while ((c = *(argv[argc]+(++i)))) {
 		switch (c) {
 			case 'a':
 				state.func = alpha;
@@ -81,46 +81,67 @@ static size_t filesize(FILE *fp)
 
 	fseek(fp, 0L, SEEK_END);
 	len = 1 + (unsigned)ftell(fp);
-	rewind(fp);
 
 	return len;
 }
 
 /*
- * getinput:	Input files from supplied arguments and count the length of the
- * total input for later use in memory assignment.
+ * getinput:	Input files from supplied arguments, counting the total length
+ * use in memory assignment.
  */
-void getinput(char* const argument, size_t const i)
+void getinput(struct Folio *folio, int argc, char *argv[])
 {
 	FILE *fp;
-	size_t count = i+1;
+	size_t i, j;
+
+	for (i = 1, j = 0; i < (unsigned)argc; i++)
+		if (*argv[i] != '-')
+			j++;
+
+	folio->files = malloc(sizeof(struct File)*j);
+	folio->t_file = j;
+
+	for (i = 0; i < j; i++) {
+		folio->files[i].lines = NULL;
+		folio->files[i].f_name.name = NULL;
+		folio->files[i].str = NULL;
+		folio->files[i].f_count = 0;
+		folio->files[i].f_len = 0;
+		folio->files[i].flag = 0;
+	}
 
 	/* Input files if address given */
-	if ((fp = fopen(argument, "r")) != NULL) {
-		folio.files[i].name = (unsigned char*)argument, folio.files[i].file = 1,
-			folio.file_t = count;
-		folio.len_t += folio.files[i].len = filesize(fp);
-		fclose(fp);
-	} else {
-		folio.files[i].str = (unsigned char*)argument, folio.files[i].name = (unsigned char*)"$string",
-			folio.file_t = count;
-		folio.len_t += folio.files[i].len = strlen((char*)folio.files[i].str)+1;
-	}
+	for (i = 1, j = 0; i < (unsigned)argc; i++)
+		if (*argv[i] != '-') {
+			if ((fp = fopen(argv[i], "r")) != NULL) {
+				folio->files[j].f_name.name = (unsigned char*)argv[i];
+				folio->files[j].flag = 1;
+				folio->t_len += folio->files[j].f_len = filesize(fp);
+				fclose(fp);
+			} else {
+				folio->files[j].str = (unsigned char*)argv[i];
+				folio->files[j].f_name.name = (unsigned char*)"$string";
+				folio->files[j].f_len = strlen((char*)folio->files[j].str)+1;
+				folio->t_len += folio->files[j].f_len;
+			}
+			j++;
+		}
+
 }
 
 /*
  * readfile:	Transfer input form file to memory, count end of line
  * characters whilst doing so.
  */
-static unsigned char* readfile(Folio *folio, unsigned char* mem, size_t i)
+static unsigned char* readfile(struct Folio *folio, unsigned char* mem, size_t i)
 {
 	FILE *fp;
 	int c;
-	fp = fopen((char*)folio->files[i].name, "r");
+	fp = fopen((char*)folio->files[i].f_name.name, "r");
 
 	while ((c = getc(fp)) != EOF) {
 		if (c == '\n' && *(mem-1) != '\\')
-			(folio->files[i].count)++;
+			(folio->files[i].f_count)++;
 		*mem++ = (unsigned char)c;
 	}
 	*mem++ = '\0';
@@ -132,14 +153,14 @@ static unsigned char* readfile(Folio *folio, unsigned char* mem, size_t i)
 /*
  * readstring:	Copy argument string into folio memory block.
  */
-static unsigned char* readstring(Folio *folio, unsigned char* mem, const size_t i)
+static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const size_t i)
 {
 	size_t j;
 	unsigned char c;
 
 	for (j = 0; (c = *(folio->files[i].str+j)) != '\0'; j++) {
 		if (c == '\n' && *(mem-1) != '\\')
-			(folio->files[i].count)++;
+			(folio->files[i].f_count)++;
 		*mem++ = (char)c;
 	}
 
@@ -151,30 +172,33 @@ static unsigned char* readstring(Folio *folio, unsigned char* mem, const size_t 
 /*
  * defline:	Exchange all instances of \n for \0.
  */
-static void defline(Folio *folio, unsigned char* mem, const size_t i, size_t *j, size_t *k)
+static void defline(struct Folio *folio, unsigned char* mem, const size_t i, size_t *j, size_t *k)
 {
-	folio->files[i].lines[*j][0].line = mem+1;
+	folio->files[i].lines[*j][0].name = &(folio->files[i].f_name);
 	folio->files[i].lines[*j][0].next = NULL;
+	folio->files[i].lines[*j][0].len = *k;
+	folio->files[i].lines[*j][0].num = (*j)+1;
 	folio->files[i].lines[*j][0].isTrue = 0;
-	folio->files[i].lines[(*j)++][0].len = *k;
-	*k = 0;
-	*mem = '\0';
+	*k = 0, *mem = '\0';
+
+	if (*(mem+1) != '\0')
+		folio->files[i].lines[++*j][0].line = mem+1;
 }
 
 /*
  * alloclines:	 Memory for Line pointer array and structs.
  */
-static void alloclines(Folio *folio, size_t i)
+static void alloclines(struct Folio *folio, size_t i)
 {
 	size_t j;
 
 	/* allocate an array of pointers to structs, one for each line of text */
-	if ((folio->files[i].lines = malloc(folio->files[i].count*(sizeof(Line*)))) == NULL)
+	if ((folio->files[i].lines = malloc(folio->files[i].f_count*(sizeof(struct Line*)))) == NULL)
 		printf("error:	malloc failed to assign memory in alloclines(), Line**\n");
 
 	/* Allocat the memory for the structs them selves. */
-	for (j = 0; j < folio->files[i].count; j++)
-		if ((folio->files[i].lines[j] = malloc(sizeof(Line))) == NULL)
+	for (j = 0; j < folio->files[i].f_count; j++)
+		if ((folio->files[i].lines[j] = malloc(sizeof(struct Line))) == NULL)
 			printf("error:	malloc failed to assign memory in alloclines(), Line\n");
 }
 
@@ -183,14 +207,14 @@ static void alloclines(Folio *folio, size_t i)
  * contents, or the string, into an array of pointers; Use one string for each
  * line.
  */
-void loadfolio(Folio *folio)
+void loadfolio(struct Folio *folio)
 {
 	size_t i, j, k;
 	char c;
 	unsigned char *mem, *mark;
 
 	/* Request required memory for all strings*/
-	if ((folio->memory = malloc(folio->len_t*sizeof(char))) == NULL)
+	if ((folio->memory = malloc(folio->t_len*sizeof(char))) == NULL)
 		printf("error:	malloc failed to assign memory in loadfolio(), memory\n");
 
 	/* set pointer to start of memory block */
@@ -198,18 +222,18 @@ void loadfolio(Folio *folio)
 
 	/* Copy each file onto allocated memory, set each entry point and count
 	 * new line char */
-	for (i = 0; i < folio->file_t; i++)
+	for (i = 0; i < folio->t_file; i++)
 	{
 		/* Count \n's and transcribe form source to memory. */
-		if (folio->files[i].file)
+		if (folio->files[i].flag)
 			mem = readfile(folio, mem, i);
 		else
 			mem = readstring(folio, mem, i);
 
 		/* If there is no new line char in the previous place, the line
 		 * has not yet been counted; Count it. */
-		if(*(mem-2) != '\n')
-			(folio->files[i].count)++;
+		if(i > 0 && *(mem-2) != '\n')
+			(folio->files[i].f_count)++;
 
 		/* Mark the end of the current input and then reset to start. */
 		mark = mem;
@@ -228,7 +252,7 @@ void loadfolio(Folio *folio)
 				defline(folio, mem, i, &j, &k);
 
 		/* Add the file linecount to the total line count. */
-		folio->line_t += folio->files[i].count;
+		folio->t_line += folio->files[i].f_count;
 
 		/* Set all markers to start of next memory block */
 		mem = folio->memory = mark;
@@ -358,15 +382,15 @@ size_t deleteline(unsigned char *lineptr[], int line, size_t nlines)
 
 	if ((len = freealloc(lineptr[line]))) {
 		/*
-		 * Displace all pointers after the removed by one place.
+		 * Displace all pointers after the removed pointer, by one place.
 		 */
 		while (line < (int)nlines) {
 			lineptr[line] = lineptr[line+1];
 			line++;
 		}
 		/*
-		 * Diminish any address that is greater than the address of
-		 * the removed line by the length of the remove line.
+		 * Diminish any address that is greater than the that of the
+		 * removed line by the length of the same.
 		 */
 		while (i < nlines) {
 			if (lineptr[i] > m)
@@ -399,7 +423,7 @@ void printhash(unsigned char **lines, size_t lp)
 
 	for (i = 0; i < lp; i++)
 		if (state.linenum)
-			printf("%3lu: %s\n", i, lines[i]);
+			printf("%3lu: %s\n", i+1, lines[i]);
 		else
 			printf("%s\n", lines[i]);
 }
@@ -407,13 +431,13 @@ void printhash(unsigned char **lines, size_t lp)
 /*
  * printhash:	Write output.
  */
-void printhashstruct(Line **lines, size_t lp)
+void printhashstruct(struct Line **lines, size_t lp)
 {
 	size_t i;
 
 	for (i = 0; i < lp; i++)
 		if (state.linenum)
-			printf("%3lu: %s\n", i, lines[i]->line);
+			printf("%s:%3lu: %s\n", lines[i]->name->name, lines[i]->num, lines[i]->line);
 		else
 			printf("%s\n", lines[i]->line);
 }
@@ -421,14 +445,14 @@ void printhashstruct(Line **lines, size_t lp)
 /*
  * printfolio:	Basic test of folio struct data.
  */
-void printfolio(Folio folio)
+void printfolio(struct Folio folio)
 {
 	size_t i, j;
 
-	for (i = 0; i < folio.file_t; i++)
-		for (j = 0; j < folio.files[i].count; j++)
+	for (i = 0; i < folio.t_file; i++)
+		for (j = 0; j < folio.files[i].f_count; j++)
 			//if (folio.files[i].lines[j].isTrue)
-				printf("%s:%3lu: %s\n", folio.files[i].name, j+1,
+				printf("%s:%3lu: %s\n", folio.files[i].f_name.name, j+1,
 						folio.files[i].lines[j][0].line);
 }
 

@@ -27,14 +27,14 @@ compar strfold = (int (*)(void*, void*)) sortfolded;
 /*
  * _qsort:	Sort v[left]...v[right] into increasing order.
  */
-void _qsort(void *v[], int left, int right, compar fn, int ntab)
+void _qsort(void *line[], int left, int right, compar fn, int ntab)
 {
 	size_t i, last;
 
 	if (left >= right)	/* do nothing if array contains */
 		return;		/* fewer than two elements */
 
-	swap(v, left, (left + right)/2);
+	swap(line, left, (left + right)/2);
 	last = left;
 
 	/*
@@ -42,16 +42,16 @@ void _qsort(void *v[], int left, int right, compar fn, int ntab)
 	 */
 	if (!state.reverse) {
 		for (i = left+1; (int)i <= right; i++)
-			if (nsort(v[i], v[left], fn, ntab) < 0)
-				swap(v, ++last, i);
+			if (nsort(line[i], line[left], fn, ntab) < 0)
+				swap(line, ++last, i);
 	} else
 		for (i = left+1; (int)i <= right; i++)
-			if (nsort(v[i], v[left], fn, ntab) > 0)
-				swap(v, ++last, i);
+			if (nsort(line[i], line[left], fn, ntab) > 0)
+				swap(line, ++last, i);
 
-	swap(v, left, last);
-	_qsort(v, left, last-1, fn, ntab);
-	_qsort(v, last+1, right, fn, ntab);
+	swap(line, left, last);
+	_qsort(line, left, last-1, fn, ntab);
+	_qsort(line, last+1, right, fn, ntab);
 }
 
 /*
@@ -345,7 +345,7 @@ static unsigned char* jumptotab(unsigned char *c, int ntab)
 /*
  * sortascii:	Conversion used for sortfolded.
  */
-static int sortascii(int *c, bool fold)
+static int sortascii(unsigned char *c, bool fold)
 {
 	if (isupper(*c))
 		if (fold)
@@ -364,7 +364,7 @@ static int sortascii(int *c, bool fold)
  */
 static int sortalpha(unsigned char *s1, unsigned char *s2)
 {
-	int c1, c2;
+	unsigned char c1, c2;
 	c1 = *s1, c2 = *s2;
 	c1 = sortascii(&c1, false);
 	c2 = sortascii(&c2, false);
@@ -376,7 +376,7 @@ static int sortalpha(unsigned char *s1, unsigned char *s2)
  */
 static int sortfolded(unsigned char *s1, unsigned char *s2)
 {
-	int c1, c2;
+	unsigned char c1, c2;
 	c1 = *s1, c2 = *s2;
 	c1 = sortascii(&c1, true);
 	c2 = sortascii(&c2, true);

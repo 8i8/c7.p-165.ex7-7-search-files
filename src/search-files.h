@@ -12,8 +12,7 @@
 #undef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
 
-//#define MAXFILES	FOPEN_MAX
-#define MAXFILES	10000
+#define MAXFILES	1000
 #define MAXLEN		1000			/* Max length of input line */
 #define MAXLINES	5000			/* Lines to be sorted */
 #define ALLOCSIZE	5000			/* Size of available space */
@@ -33,70 +32,72 @@ extern compar strfold;
 typedef short int bool;
 
 /* Global flags */
-typedef struct {
-	bool numeric;				/* use numeric sort in qsort */
-	bool reverse;				/* reverse search order */
-	bool remempty;
-	bool directory;
-	bool rsort;
-	bool indx;
-	bool linenum;
-	int  func;				/* Define which function to use */
-} State;
+struct State {
+	unsigned int func;				/* Define which function to use */
+	unsigned int numeric	: 1;				/* use numeric sort in qsort */
+	unsigned int reverse	: 1;				/* reverse search order */
+	unsigned int remempty	: 1;
+	unsigned int directory	: 1;
+	unsigned int rsort	: 1;
+	unsigned int indx	: 1;
+	unsigned int linenum	: 1;
+};
+
+struct F_name {
+	unsigned char *name;
+};
 
 /* Global data struct, to store each file */
-struct line {
-	struct line *next;
+struct Line {
 	unsigned char *line;
+	struct F_name *name;
+	struct Line *next;
 	size_t len;
-	short isTrue;
+	size_t num;
+	unsigned int isTrue : 1;
 };
 
-typedef struct line Line;
-
-struct file {
+struct File {
+	struct Line **lines;
+	struct F_name f_name;
 	unsigned char *str;
-	Line **lines;
-	unsigned char *name;
-	size_t count;
-	size_t len;
-	short file;
+	unsigned int flag : 1;
+	size_t f_count;
+	size_t f_len;
 };
 
-typedef struct file File;
-
-typedef struct {
-	File files[MAXFILES];
+struct Folio {
+	struct File *files;
 	unsigned char *memory;
-	size_t file_t;
-	size_t line_t;
-	size_t len_t;
-} Folio;
+	size_t t_file;
+	size_t t_line;
+	size_t t_len;
+};
 
-extern State state;
-extern Folio folio;
+extern struct State state;
+extern struct Folio folio;
 extern unsigned char *lineptr[];
 extern size_t pt;
 
 /* Main */
-size_t settings(int argc, char*argv[]);
+void settings(int argc, char*argv[]);
 void inputargs(int argc, char*argv[]);
-void sortsection(void *lineptr[], int left, int right, int func, int ntab);
+void sortsection(void *lines[], int left, int right, int func, int ntab);
 void resetglobals(void);
 
 /* i/o */
-void getflags(int argc, char*argv[]);
-void getinput(char* const argument, size_t const file);
-void loadfolio(Folio *folio);
+void getflags(int argc, char *argv[]);
+void getinput(struct Folio *folio, int argc, char *argv[]);
+void loadfolio(struct Folio *folio);
 size_t readlines(unsigned char *lineptr[], size_t maxlines);
 void printhash(unsigned char **lines, size_t lp);
 size_t deleteline(unsigned char *lineptr[], int line, size_t nlines);
 void settabs(char n[]);
 size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines, size_t index, size_t nlines);
-void printfolio(Folio folio);
+void printfolio(struct Folio folio);
 
 /* Hash table */
-void hashtable(Folio *folio);
+void hashtable(struct Folio *folio);
 
 /* Sort */
 void _qsort(void *lineptr[], int left, int right, compar fn, int ntab);
