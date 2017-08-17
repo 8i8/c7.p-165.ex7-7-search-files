@@ -4,8 +4,8 @@
 #include "search-files.h"
 #include <string.h>
 
-unsigned char *lineptr[MAXLINES];		/* Pointer to text lines */
-static unsigned char allocbuf[ALLOCSIZE];	/* Storage for alloc */
+unsigned char *lineptr[MAXLINES];			/* Pointer to text lines */
+static unsigned char allocbuf[ALLOCSIZE];		/* Storage for alloc */
 static unsigned char *allocp = allocbuf;		/* Next free position */
 
 static size_t _getline(unsigned char *, size_t);
@@ -451,7 +451,7 @@ void printfolio(struct Folio folio)
 
 	for (i = 0; i < folio.t_file; i++)
 		for (j = 0; j < folio.files[i].f_count; j++)
-			//if (folio.files[i].lines[j].isTrue)
+			if (folio.files[i].lines[j]->isTrue)
 				printf("%s:%3lu: %s\n", folio.files[i].f_name.name, j+1,
 						folio.files[i].lines[j][0].line);
 }
