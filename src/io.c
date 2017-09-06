@@ -87,7 +87,7 @@ static size_t filesize(FILE *fp)
 
 /*
  * getinput:	Input files from supplied arguments, counting the total length
- * use in memory assignment.
+ * for use in total memory assignment.
  */
 void getinput(struct Folio *folio, int argc, char *argv[])
 {
@@ -98,14 +98,14 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 		if (*argv[i] != '-')
 			j++;
 
-	folio->files = malloc(sizeof(struct File)*j);
-	folio->t_file = j;
+	folio->files = malloc(j*sizeof(struct File));
+	folio->t_files = j;
 
 	for (i = 0; i < j; i++) {
 		folio->files[i].lines = NULL;
 		folio->files[i].f_name.name = NULL;
 		folio->files[i].str = NULL;
-		folio->files[i].f_count = 0;
+		folio->files[i].f_lines = 0;
 		folio->files[i].f_len = 0;
 		folio->files[i].flag = 0;
 	}
@@ -117,16 +117,20 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 				folio->files[j].f_name.name = (unsigned char*)argv[i];
 				folio->files[j].flag = 1;
 				folio->t_len += folio->files[j].f_len = filesize(fp);
+				/* TODO How can the struct for the number of
+				 * lines be allocated earlier? */
 				fclose(fp);
 			} else {
 				folio->files[j].str = (unsigned char*)argv[i];
 				folio->files[j].f_name.name = (unsigned char*)"$string";
-				folio->files[j].f_len = strlen((char*)folio->files[j].str)+1;
-				folio->t_len += folio->files[j].f_len;
+				folio->t_len += folio->files[j].f_len = strlen(argv[i]);
+				/* TODO The strings need counting also, the
+				 * issue here is that there is no assurance of
+				 * an new line character, anad this character
+				 * is being used to count the lines. */
 			}
 			j++;
 		}
-
 }
 
 /*
@@ -141,7 +145,7 @@ static unsigned char* readfile(struct Folio *folio, unsigned char* mem, size_t i
 
 	while ((c = getc(fp)) != EOF) {
 		if (c == '\n' && *(mem-1) != '\\')
-			(folio->files[i].f_count)++;
+			(folio->files[i].f_lines)++;
 		*mem++ = (unsigned char)c;
 	}
 	*mem++ = '\0';
@@ -160,7 +164,7 @@ static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const 
 
 	for (j = 0; (c = *(folio->files[i].str+j)) != '\0'; j++) {
 		if (c == '\n' && *(mem-1) != '\\')
-			(folio->files[i].f_count)++;
+			(folio->files[i].f_lines)++;
 		*mem++ = (char)c;
 	}
 
@@ -188,18 +192,29 @@ static void defline(struct Folio *folio, unsigned char* mem, const size_t i, siz
 /*
  * alloclines:	 Memory for Line pointer array and structs.
  */
-static void alloclines(struct Folio *folio, size_t i)
+static void alloclines(struct Folio *folio)
 {
-	size_t j;
+	if ((linesArray = malloc(folio->t_lines*(sizeof(struct Line)))) == NULL)
+		printf("error:	malloc failed to assign memory in alloclines(), Line\n");
 
-	/* allocate an array of pointers to structs, one for each line of text */
-	if ((folio->files[i].lines = malloc(folio->files[i].f_count*(sizeof(struct Line*)))) == NULL)
-		printf("error:	malloc failed to assign memory in alloclines(), Line**\n");
+	if ((folio->files[0].lines = malloc(sizeof(struct Line**))) != NULL)
+		printf("error:	malloc failed to assign memory in alloclines(), Line*\n");
+}
 
-	/* Allocat the memory for the structs them selves. */
-	for (j = 0; j < folio->files[i].f_count; j++)
-		if ((folio->files[i].lines[j] = malloc(sizeof(struct Line))) == NULL)
-			printf("error:	malloc failed to assign memory in alloclines(), Line\n");
+/*
+ * assignlines:	 Define addresses of Line pointer array of structs.
+ */
+static void assignlines(struct Folio *folio)
+{
+	size_t i, j;
+	struct Line *l_ptr;
+	l_ptr = linesArray;
+
+	for (i = 0; i < folio->t_files; i++)
+		for (j = 0; j < folio->files[i].f_lines; j++) {
+			folio->files[i].lines[j] = l_ptr;
+			l_ptr += sizeof(struct Line);
+		}
 }
 
 /*
@@ -211,7 +226,7 @@ void loadfolio(struct Folio *folio)
 {
 	size_t i, j, k;
 	char c;
-	unsigned char *mem, *mark;
+	unsigned char *mem;
 
 	/* Request required memory for all strings*/
 	if ((folio->memory = malloc(folio->t_len*sizeof(char))) == NULL)
@@ -222,7 +237,7 @@ void loadfolio(struct Folio *folio)
 
 	/* Copy each file onto allocated memory, set each entry point and count
 	 * new line char */
-	for (i = 0; i < folio->t_file; i++)
+	for (i = 0; i < folio->t_files; i++)
 	{
 		/* Count \n's and transcribe form source to memory. */
 		if (folio->files[i].flag)
@@ -233,15 +248,22 @@ void loadfolio(struct Folio *folio)
 		/* If there is no new line char in the previous place, the line
 		 * has not yet been counted; Count it. */
 		if(i > 0 && *(mem-2) != '\n')
-			(folio->files[i].f_count)++;
+			(folio->files[i].f_lines)++;
 
-		/* Mark the end of the current input and then reset to start. */
-		mark = mem;
+		/* Reset to start address. */
 		mem = folio->memory;
+	}
 
-		/* Memory for pointer array and structs */
-		alloclines(folio, i);
+	/* Memory for pointer array and structs */
+	/* TODO This memory allocation needs to be made in one block in
+	 * order that the struct array be passable to qsort. */
+	alloclines(folio);
+	assignlines(folio);
 
+	/* Copy each file onto allocated memory, set each entry point and count
+	 * new line char */
+	for (i = 0; i < folio->t_files; i++)
+	{
 		/* Set the first structs string to current memory position. */
 		folio->files[i].lines[0][0].line = mem;
 
@@ -252,10 +274,10 @@ void loadfolio(struct Folio *folio)
 				defline(folio, mem, i, &j, &k);
 
 		/* Add the file linecount to the total line count. */
-		folio->t_line += folio->files[i].f_count;
+		folio->t_lines += folio->files[i].f_lines;
 
 		/* Set all markers to start of next memory block */
-		mem = folio->memory = mark;
+		mem = folio->memory;
 	}
 }
 
@@ -449,8 +471,8 @@ void printfolio(struct Folio folio)
 {
 	size_t i, j;
 
-	for (i = 0; i < folio.t_file; i++)
-		for (j = 0; j < folio.files[i].f_count; j++)
+	for (i = 0; i < folio.t_files; i++)
+		for (j = 0; j < folio.files[i].f_lines; j++)
 			if (folio.files[i].lines[j]->isTrue)
 				printf("%s:%3lu: %s\n", folio.files[i].f_name.name, j+1,
 						folio.files[i].lines[j][0].line);

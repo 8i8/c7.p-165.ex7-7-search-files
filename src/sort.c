@@ -25,14 +25,86 @@ compar stnsort = (int (*)(void*, void*)) sortalpha;
 compar strfold = (int (*)(void*, void*)) sortfolded;
 
 /*
+ * sortsection:	Switch, selects the sort function for qsort, see program states.
+ */
+void sortsection(void **folio, int left, int right, int func, int ntab)
+{
+	switch (func) {
+		case simple:
+			_qsort((void**)folio, left, right, strsimp, ntab);
+			break;
+		case alpha:
+			_qsort((void**)folio, left, right, stnsort, ntab);
+			break;
+		case fold:
+			_qsort((void**)folio, left, right, strfold, ntab);
+			break;
+		case nosort:
+			break;
+		default:
+			break;
+	}
+}
+
+void _sortsection(void *folio, int nel, int width, int func, int ntab)
+{
+	switch (func) {
+		case simple:
+			_qsort((void**)folio, nel, width, strsimp, ntab);
+			break;
+		case alpha:
+			_qsort((void**)folio, nel, width, stnsort, ntab);
+			break;
+		case fold:
+			_qsort((void**)folio, nel, width, strfold, ntab);
+			break;
+		case nosort:
+			break;
+		default:
+			break;
+	}
+}
+
+//typedef int (*comp)(const void *, const void *);
+//static void _swap(void *v, size_t i, size_t j, size_t width);
+//
+///*
+// * qsort:	generic qsort function.
+// */
+//void qsort(void *base, size_t nel, size_t width, comp fn)
+//{
+//	unsigned char *b = (void*)base;
+//	size_t i, left, last;
+//
+//	left = 0;
+//	if (nel)
+//		nel--;
+//
+//	if (left >= nel)
+//		return;
+//
+//	_swap(b, left, nel/2, width);
+//
+//	last = left;
+//	for (i = left+1; i <= nel; i++)
+//		if ((fn)(&b[i*width], &b[left*width]) < 0)
+//			_swap(b, ++last, i, width);
+//
+//	_swap(b, left, last, width);
+//
+//	qsort(b+(left*width), last-left, width, fn);
+//	qsort(b+((last+1)*width), nel-last, width, fn);
+//}
+
+/*
  * _qsort:	Sort v[left]...v[right] into increasing order.
  */
 void _qsort(void *line[], int left, int right, compar fn, int ntab)
 {
 	size_t i, last;
 
-	if (left >= right)	/* do nothing if array contains */
-		return;		/* fewer than two elements */
+	if (left >= right)		/* do nothing if array contains */
+		return;			/* fewer than two elements */
 
 	swap(line, left, (left + right)/2);
 	last = left;
@@ -271,7 +343,6 @@ size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, int ntab)
 			j = i-1;
 			while (i < nlines && !strtcmp(lineptr[i-1], lineptr[i]))
 				i++;
-
 			/*
 			 * Perform sort between this current change of letter
 			 * and the last stored index j; then store i as j.

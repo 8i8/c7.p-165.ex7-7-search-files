@@ -33,9 +33,9 @@ typedef short int bool;
 
 /* Global flags */
 struct State {
-	unsigned int func;				/* Define which function to use */
-	unsigned int numeric	: 1;				/* use numeric sort in qsort */
-	unsigned int reverse	: 1;				/* reverse search order */
+	unsigned int func;			/* Define which function to use */
+	unsigned int numeric	: 1;		/* use numeric sort in qsort */
+	unsigned int reverse	: 1;		/* reverse search order */
 	unsigned int remempty	: 1;
 	unsigned int directory	: 1;
 	unsigned int rsort	: 1;
@@ -62,27 +62,26 @@ struct File {
 	struct F_name f_name;
 	unsigned char *str;
 	unsigned int flag : 1;
-	size_t f_count;
+	size_t f_lines;			/* Character count for entire file */
 	size_t f_len;
 };
 
 struct Folio {
 	struct File *files;
 	unsigned char *memory;
-	size_t t_file;
-	size_t t_line;
+	size_t t_files;
+	size_t t_lines;
 	size_t t_len;
 };
 
 extern struct State state;
 extern struct Folio folio;
 extern unsigned char *lineptr[];
+extern struct Line *linesArray;
 extern size_t pt;
 
 /* Main */
 void settings(int argc, char*argv[]);
-void inputargs(int argc, char*argv[]);
-void sortsection(void *lines[], int left, int right, int func, int ntab);
 void resetglobals(void);
 
 /* i/o */
@@ -100,6 +99,7 @@ void printfolio(struct Folio folio);
 void hashtable(struct Folio *folio);
 
 /* Sort */
+void sortsection(void *lines[], int left, int right, int func, int ntab);
 void _qsort(void *lineptr[], int left, int right, compar fn, int ntab);
 size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, int ntab);
 size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, int ntab);

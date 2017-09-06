@@ -37,4 +37,7 @@ void resetglobals(void)
 	state.indx =		false;
 }
 
+struct Line *linesArray;
+
 size_t pt = 0;
+
