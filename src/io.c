@@ -197,7 +197,7 @@ static void alloclines(struct Folio *folio)
 	if ((linesArray = malloc(folio->t_lines*(sizeof(struct Line)))) == NULL)
 		printf("error:	malloc failed to assign memory in alloclines(), Line\n");
 
-	if ((folio->files[0].lines = malloc(sizeof(struct Line**))) != NULL)
+	if ((folio->files[0].lines = malloc(folio->t_lines*(sizeof(struct Line*)))) != NULL)
 		printf("error:	malloc failed to assign memory in alloclines(), Line*\n");
 }
 
@@ -211,10 +211,8 @@ static void assignlines(struct Folio *folio)
 	l_ptr = linesArray;
 
 	for (i = 0; i < folio->t_files; i++)
-		for (j = 0; j < folio->files[i].f_lines; j++) {
-			folio->files[i].lines[j] = l_ptr;
-			l_ptr += sizeof(struct Line);
-		}
+		for (j = 0; j < folio->files[i].f_lines; j++)
+			folio->files[i].lines[j].line = l_ptr++;
 }
 
 /*
