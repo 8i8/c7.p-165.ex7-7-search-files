@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	hashtable(&folio);
 
 	/* Sort input */
-	sortsection((void**)lineptr, 0, pt-1, state.func, 0);
+	//sortsection((void**)lineptr, 0, pt-1, state.func, 0);
 	
 	///* If required, add line spacers. */
 	//if (state.directory)
