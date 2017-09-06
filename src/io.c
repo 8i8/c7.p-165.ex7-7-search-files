@@ -194,11 +194,14 @@ static void defline(struct Folio *folio, unsigned char* mem, const size_t i, siz
  */
 static void alloclines(struct Folio *folio)
 {
+	size_t i;
+
 	if ((linesArray = malloc(folio->t_lines*(sizeof(struct Line)))) == NULL)
 		printf("error:	malloc failed to assign memory in alloclines(), Line\n");
 
-	if ((folio->files[0].lines = malloc(folio->t_lines*(sizeof(struct Line*)))) != NULL)
-		printf("error:	malloc failed to assign memory in alloclines(), Line*\n");
+	for (i = 0; i < folio->t_files; i++)
+		if ((folio->files[0].lines = malloc(folio->files[i].f_lines*(sizeof(struct Line*)))) != NULL)
+			printf("error:	malloc failed to assign memory in alloclines(), Line*\n");
 }
 
 /*
