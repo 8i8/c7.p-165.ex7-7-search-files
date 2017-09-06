@@ -212,7 +212,7 @@ static void assignlines(struct Folio *folio)
 
 	for (i = 0; i < folio->t_files; i++)
 		for (j = 0; j < folio->files[i].f_lines; j++)
-			folio->files[i].lines[j].line = l_ptr++;
+			folio->files[i].lines[j] = l_ptr++;
 }
 
 /*
