@@ -178,15 +178,15 @@ static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const 
  */
 static void defline(struct Folio *folio, unsigned char* mem, const size_t i, size_t *j, size_t *k)
 {
-	folio->files[i].lines[*j][0].name = &(folio->files[i].f_name);
-	folio->files[i].lines[*j][0].next = NULL;
-	folio->files[i].lines[*j][0].len = *k;
-	folio->files[i].lines[*j][0].num = (*j)+1;
-	folio->files[i].lines[*j][0].isTrue = 0;
+	folio->files[i].lines[*j].name = &(folio->files[i].f_name);
+	folio->files[i].lines[*j].next = NULL;
+	folio->files[i].lines[*j].len = *k;
+	folio->files[i].lines[*j].num = (*j)+1;
+	folio->files[i].lines[*j].isTrue = 0;
 	*k = 0, *mem = '\0';
 
 	if (*(mem+1) != '\0')
-		folio->files[i].lines[++*j][0].line = mem+1;
+		folio->files[i].lines[++*j].line = mem+1;
 }
 
 /*
@@ -200,7 +200,7 @@ static void alloclines(struct Folio *folio)
 		printf("error:	malloc failed to assign memory in alloclines(), Line\n");
 
 	for (i = 0; i < folio->t_files; i++)
-		if ((folio->files[0].lines = malloc(folio->files[i].f_lines*(sizeof(struct Line*)))) != NULL)
+		if ((folio->files[i].lines = malloc(folio->files[i].f_lines*(sizeof(struct Line*)))) != NULL)
 			printf("error:	malloc failed to assign memory in alloclines(), Line*\n");
 }
 
@@ -215,7 +215,7 @@ static void assignlines(struct Folio *folio)
 
 	for (i = 0; i < folio->t_files; i++)
 		for (j = 0; j < folio->files[i].f_lines; j++)
-			folio->files[i].lines[j] = l_ptr++;
+			folio->files[i].lines = l_ptr++;
 }
 
 /*
@@ -266,7 +266,7 @@ void loadfolio(struct Folio *folio)
 	for (i = 0; i < folio->t_files; i++)
 	{
 		/* Set the first structs string to current memory position. */
-		folio->files[i].lines[0][0].line = mem;
+		folio->files[i].lines[0].line = mem;
 
 		/* Iterate through each file, replacing end of line marker with
 		 * the NUL terminator. */
@@ -474,8 +474,8 @@ void printfolio(struct Folio folio)
 
 	for (i = 0; i < folio.t_files; i++)
 		for (j = 0; j < folio.files[i].f_lines; j++)
-			if (folio.files[i].lines[j]->isTrue)
+			if (folio.files[i].lines[j].isTrue)
 				printf("%s:%3lu: %s\n", folio.files[i].f_name.name, j+1,
-						folio.files[i].lines[j][0].line);
+						folio.files[i].lines[j].line);
 }
 

@@ -58,7 +58,7 @@ struct Line {
 };
 
 struct File {
-	struct Line **lines;
+	struct Line *lines;
 	struct F_name f_name;
 	unsigned char *str;
 	unsigned int flag : 1;
