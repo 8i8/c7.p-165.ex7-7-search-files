@@ -145,7 +145,7 @@ static unsigned char* readfile(struct Folio *folio, unsigned char* mem, size_t i
 
 	while ((c = getc(fp)) != EOF) {
 		if (c == '\n' && *(mem-1) != '\\')
-			(folio->files[i].f_lines)++;
+			(folio->files[i].f_lines)++, folio->t_lines++;
 		*mem++ = (unsigned char)c;
 	}
 	*mem++ = '\0';
@@ -164,7 +164,7 @@ static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const 
 
 	for (j = 0; (c = *(folio->files[i].str+j)) != '\0'; j++) {
 		if (c == '\n' && *(mem-1) != '\\')
-			(folio->files[i].f_lines)++;
+			(folio->files[i].f_lines)++, folio->t_lines++;
 		*mem++ = (char)c;
 	}
 
@@ -199,9 +199,14 @@ static void alloclines(struct Folio *folio)
 	if ((linesArray = malloc(folio->t_lines*(sizeof(struct Line)))) == NULL)
 		printf("error:	malloc failed to assign memory in alloclines(), Line\n");
 
-	for (i = 0; i < folio->t_files; i++)
-		if ((folio->files[i].lines = malloc(folio->files[i].f_lines*(sizeof(struct Line*)))) != NULL)
-			printf("error:	malloc failed to assign memory in alloclines(), Line*\n");
+	for (i = 0; i < folio->t_lines; i++) {
+		linesArray[i].line = NULL;
+		linesArray[i].name = NULL;
+		linesArray[i].next = NULL;
+		linesArray[i].len = 0;
+		linesArray[i].num = 0;
+		linesArray[i].isTrue = 0;
+	}
 }
 
 /*
@@ -213,9 +218,12 @@ static void assignlines(struct Folio *folio)
 	struct Line *l_ptr;
 	l_ptr = linesArray;
 
-	for (i = 0; i < folio->t_files; i++)
+	for (i = 0; i < folio->t_files; i++) {
+		folio->files[i].lines = malloc(folio->files[i].f_lines*sizeof(struct Line*));
+		folio->files[i].lines = l_ptr++;
 		for (j = 0; j < folio->files[i].f_lines; j++)
-			folio->files[i].lines = l_ptr++;
+			l_ptr++;
+	}
 }
 
 /*
@@ -237,7 +245,7 @@ void loadfolio(struct Folio *folio)
 	mem = folio->memory;
 
 	/* Copy each file onto allocated memory, set each entry point and count
-	 * new line char */
+	 * new line char for struct creation that follows */
 	for (i = 0; i < folio->t_files; i++)
 	{
 		/* Count \n's and transcribe form source to memory. */
@@ -261,13 +269,12 @@ void loadfolio(struct Folio *folio)
 	alloclines(folio);
 	assignlines(folio);
 
-	/* Copy each file onto allocated memory, set each entry point and count
-	 * new line char */
+	/* Set the first structs string to current memory position. */
+	folio->files[0].lines[0].line = mem;
+
+	/* Assign each files starting address to the array */
 	for (i = 0; i < folio->t_files; i++)
 	{
-		/* Set the first structs string to current memory position. */
-		folio->files[i].lines[0].line = mem;
-
 		/* Iterate through each file, replacing end of line marker with
 		 * the NUL terminator. */
 		for (j = 0, k = 0; (c = *mem) != '\0'; mem++, k++)
@@ -479,3 +486,11 @@ void printfolio(struct Folio folio)
 						folio.files[i].lines[j].line);
 }
 
+void freeall(struct Folio *folio)
+{
+	size_t i;
+	for (i = 0; i < folio->t_files; i++)
+		free(folio->files[i].lines);
+	free(folio->memory);
+	free(folio->files);
+}

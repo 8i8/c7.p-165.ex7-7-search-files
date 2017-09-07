@@ -94,6 +94,7 @@ size_t deleteline(unsigned char *lineptr[], int line, size_t nlines);
 void settabs(char n[]);
 size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines, size_t index, size_t nlines);
 void printfolio(struct Folio folio);
+void freeall(struct Folio *folio);
 
 /* Hash table */
 void hashtable(struct Folio *folio);

@@ -1,0 +1,1 @@
+gcc -g -Wall -Wextra src/init.c src/main.c src/io.c src/sort.c src/hash.c

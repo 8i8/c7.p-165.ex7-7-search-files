@@ -8,8 +8,6 @@
 
 int main(int argc, char *argv[])
 {
-	//size_t i;
-
 	if (argc > 1)
 		settings(argc, argv);
 
@@ -48,6 +46,8 @@ int main(int argc, char *argv[])
 
 	printfolio(folio);
 	//printhash(lineptr, pt);
+
+	freeall(&folio);
 
 	return 0;
 }
