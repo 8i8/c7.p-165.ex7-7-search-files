@@ -117,17 +117,11 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 				folio->files[j].f_name.name = (unsigned char*)argv[i];
 				folio->files[j].flag = 1;
 				folio->t_len += folio->files[j].f_len = filesize(fp);
-				/* TODO How can the struct for the number of
-				 * lines be allocated earlier? */
 				fclose(fp);
 			} else {
 				folio->files[j].str = (unsigned char*)argv[i];
 				folio->files[j].f_name.name = (unsigned char*)"$string";
 				folio->t_len += folio->files[j].f_len = strlen(argv[i]);
-				/* TODO The strings need counting also, the
-				 * issue here is that there is no assurance of
-				 * an new line character, anad this character
-				 * is being used to count the lines. */
 			}
 			j++;
 		}
@@ -140,13 +134,15 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 static unsigned char* readfile(struct Folio *folio, unsigned char* mem, size_t i)
 {
 	FILE *fp;
+	size_t j;
 	int c;
+	j = 0;
 	fp = fopen((char*)folio->files[i].f_name.name, "r");
 
 	while ((c = getc(fp)) != EOF) {
-		if (c == '\n' && *(mem-1) != '\\')
+		if (c == '\n' && (j > 0 && (*(mem-1) != '\\')))
 			(folio->files[i].f_lines)++, folio->t_lines++;
-		*mem++ = (unsigned char)c;
+		*mem++ = (unsigned char)c, j++;
 	}
 	*mem++ = '\0';
 	fclose(fp);
@@ -159,15 +155,14 @@ static unsigned char* readfile(struct Folio *folio, unsigned char* mem, size_t i
  */
 static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const size_t i)
 {
-	size_t j;
+	size_t j, k;
 	unsigned char c;
 
 	for (j = 0; (c = *(folio->files[i].str+j)) != '\0'; j++) {
-		if (c == '\n' && *(mem-1) != '\\')
+		if (c == '\n' && (k > 0 && (*(mem-1) != '\\')))
 			(folio->files[i].f_lines)++, folio->t_lines++;
-		*mem++ = (char)c;
+		*mem++ = (char)c, k++;
 	}
-
 	*mem++ = '\0';
 
 	return mem;
@@ -219,7 +214,6 @@ static void assignlines(struct Folio *folio)
 	l_ptr = linesArray;
 
 	for (i = 0; i < folio->t_files; i++) {
-		folio->files[i].lines = malloc(folio->files[i].f_lines*sizeof(struct Line*));
 		folio->files[i].lines = l_ptr++;
 		for (j = 0; j < folio->files[i].f_lines; j++)
 			l_ptr++;
@@ -278,7 +272,7 @@ void loadfolio(struct Folio *folio)
 		/* Iterate through each file, replacing end of line marker with
 		 * the NUL terminator. */
 		for (j = 0, k = 0; (c = *mem) != '\0'; mem++, k++)
-			if (c == '\n' && *(mem-1) != '\\')
+			if (c == '\n' && (k > 0 && (*(mem-1) != '\\')))
 				defline(folio, mem, i, &j, &k);
 
 		/* Add the file linecount to the total line count. */
@@ -488,9 +482,10 @@ void printfolio(struct Folio folio)
 
 void freeall(struct Folio *folio)
 {
-	size_t i;
-	for (i = 0; i < folio->t_files; i++)
-		free(folio->files[i].lines);
+	//size_t i;
+	//for (i = 0; i < folio->t_files; i++)
+	//	free(folio->files[i].lines);
+	free(linesArray);
 	free(folio->memory);
 	free(folio->files);
 }
