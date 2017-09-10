@@ -24,10 +24,10 @@ enum boolean { false, true };
 enum function { simple, alpha, fold, nosort };
 
 /* Function pointers */
-typedef int (*compar)(void *, void *);		/* Sort functions for qsort */
-extern compar strsimp;
-extern compar stnsort;
-extern compar strfold;
+typedef int (*comp)(const void *, const void *, const void *);
+extern comp strsimp;
+extern comp stnsort;
+extern comp strfold;
 
 typedef short int bool;
 
@@ -100,8 +100,8 @@ void freeall(struct Folio *folio);
 void hashtable(struct Folio *folio);
 
 /* Sort */
-void sortsection(void *lines[], int left, int right, int func, int ntab);
-void _qsort(void *lineptr[], int left, int right, compar fn, int ntab);
+void sortsection(void *lines, int nel, int width, int func);
+void _qsort(void *base, size_t nel, size_t width, comp fn);
 size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, int ntab);
 size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, int ntab);
 

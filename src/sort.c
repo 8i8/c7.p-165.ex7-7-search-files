@@ -6,38 +6,39 @@
 #include <string.h>
 
 /* _qsort */
-static int nsort(unsigned char *left, unsigned char *right, compar fn, int ntab);
-static int firstcmp(unsigned char *s1, unsigned char *s2, int ntab);
-static int tabcmp(unsigned char *s1, unsigned char *s2, int ntab);
+static int nsort(unsigned char *left, unsigned char *right, comp fn);
+static int firstcmp(unsigned char *s1, unsigned char *s2);
+static int tabcmp(unsigned char *s1, unsigned char *s2);
 
 /* Sort functions */
-static void swap(void *v[], size_t i, size_t j);
+static void swap(void *string, size_t i, size_t j, size_t width);
 static unsigned char* jumptochar(unsigned char *c);
-static unsigned char* jumptotab(unsigned char *c, int ntab);
-static int sortalpha(unsigned char *s1, unsigned char *s2);
+static unsigned char* jumptotab(unsigned char *c);
 static int sortfolded(unsigned char *s1, unsigned char *s2);
 static int numcmp(unsigned char *s1, unsigned char *s2);
-static int strtcmp(unsigned char *s, unsigned char *t);
+static int *strtcmp(void *s, void *t);
+static int *sortalpha(void *s1, void *s2);
+static int *strtcmp(void *s, void *t);
 
 /* Function pointers */
-compar strsimp = (int (*)(void*, void*)) strcmp;
-compar stnsort = (int (*)(void*, void*)) sortalpha;
-compar strfold = (int (*)(void*, void*)) sortfolded;
+comp strsimp = (int (*)(void*, void*)) strtcmp;
+comp stnsort = (int (*)(void*, void*)) sortalpha;
+comp strfold = (int (*)(void*, void*)) sortfolded;
 
 /*
  * sortsection:	Switch, selects the sort function for qsort, see program states.
  */
-void sortsection(void **folio, int left, int right, int func, int ntab)
+void sortsection(void *lines, int nel, int width, int func)
 {
 	switch (func) {
 		case simple:
-			_qsort((void**)folio, left, right, strsimp, ntab);
+			_qsort((void*)lines, nel, width, strsimp);
 			break;
 		case alpha:
-			_qsort((void**)folio, left, right, stnsort, ntab);
+			_qsort((void*)lines, nel, width, stnsort);
 			break;
 		case fold:
-			_qsort((void**)folio, left, right, strfold, ntab);
+			_qsort((void*)lines, nel, width, strfold);
 			break;
 		case nosort:
 			break;
@@ -45,143 +46,33 @@ void sortsection(void **folio, int left, int right, int func, int ntab)
 			break;
 	}
 }
-
-void _sortsection(void *folio, int nel, int width, int func, int ntab)
-{
-	switch (func) {
-		case simple:
-			_qsort((void**)folio, nel, width, strsimp, ntab);
-			break;
-		case alpha:
-			_qsort((void**)folio, nel, width, stnsort, ntab);
-			break;
-		case fold:
-			_qsort((void**)folio, nel, width, strfold, ntab);
-			break;
-		case nosort:
-			break;
-		default:
-			break;
-	}
-}
-
-//typedef int (*comp)(const void *, const void *);
-//static void _swap(void *v, size_t i, size_t j, size_t width);
-//
-///*
-// * qsort:	generic qsort function.
-// */
-//void qsort(void *base, size_t nel, size_t width, comp fn)
-//{
-//	unsigned char *b = (void*)base;
-//	size_t i, left, last;
-//
-//	left = 0;
-//	if (nel)
-//		nel--;
-//
-//	if (left >= nel)
-//		return;
-//
-//	_swap(b, left, nel/2, width);
-//
-//	last = left;
-//	for (i = left+1; i <= nel; i++)
-//		if ((fn)(&b[i*width], &b[left*width]) < 0)
-//			_swap(b, ++last, i, width);
-//
-//	_swap(b, left, last, width);
-//
-//	qsort(b+(left*width), last-left, width, fn);
-//	qsort(b+((last+1)*width), nel-last, width, fn);
-//}
 
 /*
- * _qsort:	Sort v[left]...v[right] into increasing order.
+ * qsort:	generic qsort function.
  */
-void _qsort(void *line[], int left, int right, compar fn, int ntab)
+void _qsort(void *base, size_t nel, size_t width, comp fn)
 {
-	size_t i, last;
+	unsigned char *b = (void*)base;
+	size_t i, left, last;
 
-	if (left >= right)		/* do nothing if array contains */
-		return;			/* fewer than two elements */
+	left = 0;
+	if (nel)
+		nel--;
 
-	swap(line, left, (left + right)/2);
+	if (left >= nel)
+		return;
+
+	swap(b, left, nel/2, width);
+
 	last = left;
+	for (i = left+1; i <= nel; i++)
+		if ((fn)(&b[i*width], &b[left*width]) < 0)
+			swap(b, ++last, i, width);
 
-	/*
-	 * Perform sort in either the direct or the reverse order.
-	 */
-	if (!state.reverse) {
-		for (i = left+1; (int)i <= right; i++)
-			if (nsort(line[i], line[left], fn, ntab) < 0)
-				swap(line, ++last, i);
-	} else
-		for (i = left+1; (int)i <= right; i++)
-			if (nsort(line[i], line[left], fn, ntab) > 0)
-				swap(line, ++last, i);
+	swap(b, left, last, width);
 
-	swap(line, left, last);
-	_qsort(line, left, last-1, fn, ntab);
-	_qsort(line, last+1, right, fn, ntab);
-}
-
-/*
- * nsort:	Prepare string for sort function, filter numbers and letters,
- * recursive call to sort function; Separating this section of the function
- * from the body of qsort, has enabled shorter reverse '-r' code in qsort.
- */
-static int nsort(unsigned char *left, unsigned char *right, compar fn, int ntab)
-{
-	unsigned char *l_pt, *r_pt;
-	int res = 0;
-	bool b1, b2, p1, p2;
-	b1 = b2 = p1 = p2 = false;
-	l_pt = left, r_pt = right;
-
-	/*
-	 * Move to desired tab.
-	 */
-	if (ntab) {
-		if ((left = jumptotab(left, ntab)) == NULL)
-			left = l_pt, p1 = true;
-		if ((right = jumptotab(right, ntab)) == NULL)
-			right = r_pt, p2 = true;
-		/*
-		 * If either pointers returns null, return 0, the values are
-		 * not to be swapped.
-		 */
-		if (p1 == true || p2 == true)
-			return 0;
-	}
-
-	/*
-	 * Remove redundant char.
-	 */
-	left = jumptochar(left);
-	right = jumptochar(right);
-
-	if (state.numeric) {
-		if (isdigit(*left))
-			b1 = true;
-		if (isdigit(*right))
-			b2 = true;
-	}
-
-	/*
-	 * Return either alphabetical or numerical order.
-	 */
-	if (b1 && b2) {
-		res = numcmp(left, right);
-		if (!res && (*left != '\0' || *left != '\t'))
-			res = nsort(++left, ++right, fn, ntab);
-	} else {
-		res = (*fn)(left, right);
-		if (!res && (*left != '\0' || *left != '\t'))
-			res = nsort(++left, ++right, fn, ntab);
-	}
-
-        return res;
+	_qsort(b+(left*width), last-left, width, fn);
+	_qsort(b+((last+1)*width), nel-last, width, fn);
 }
 
 /*
@@ -278,7 +169,7 @@ static int firstcmp(unsigned char *s1, unsigned char *s2, int ntab)
 /*
  * Test if the contents of the given tab fields are identical.
  */
-static int tabcmp(unsigned char *s1, unsigned char *s2, int ntab)
+static int tabcmp(unsigned char *s1, unsigned char *s2)
 {
 	bool p1, p2;
 	unsigned char *s1_pt, *s2_pt;
@@ -326,7 +217,7 @@ static int tabcmp(unsigned char *s1, unsigned char *s2, int ntab)
  * index of each group and then sort by the next argv input using the given tab
  * field.
  */
-size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, int ntab)
+size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines)
 {
 	size_t i, j;
 	i = j = 0;
@@ -362,7 +253,7 @@ size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, int ntab)
 /*
  * addspacer:	Add empty 'spacer' line.
  */
-size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, int ntab)
+size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines)
 {
 	size_t i = 0;
 
@@ -379,15 +270,24 @@ size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, int n
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /*
- * swap:	Interchange v[i] and v[j]
+ * Swap for 'width' places, 'i' to 'j' on the given string.
  */
-static void swap(void *v[], size_t i, size_t j)
+static void swap(void *string, size_t i, size_t j, size_t width)
 {
-	void *temp;
+	if (i == j)
+		return; /* return directly if swap is not required */
 
-	temp = v[i];
-	v[i] = v[j];
-	v[j] = temp;
+	unsigned char t;
+	unsigned char *s = string;
+
+	i = i*width; 
+	j = j*width;
+
+	for (;width > 0;--width) {
+		t            = *(s+width+i);
+		*(s+width+i) = *(s+width+j);
+		*(s+width+j) = t;
+	}
 }
 
 /*
@@ -433,7 +333,7 @@ static int sortascii(unsigned char *c, bool fold)
 /*
  * sortalpha:	Sorting character maps.
  */
-static int sortalpha(unsigned char *s1, unsigned char *s2)
+static int *sortalpha(void *s1, void *s2)
 {
 	unsigned char c1, c2;
 	c1 = *s1, c2 = *s2;
@@ -445,7 +345,7 @@ static int sortalpha(unsigned char *s1, unsigned char *s2)
 /*
  * sortfolded:	Sort string with Upper case folded in.
  */
-static int sortfolded(unsigned char *s1, unsigned char *s2)
+static int *sortfolded(void *s1, void *s2)
 {
 	unsigned char c1, c2;
 	c1 = *s1, c2 = *s2;
@@ -472,10 +372,98 @@ static int numcmp(unsigned char *s1, unsigned char *s2)
 /*
  * strtcmp:	String compare that will stop at a tabstop.
  */
-static int strtcmp(unsigned char *s, unsigned char *t)
+static int *strtcmp(void *s, void *t)
 {
         for ( ; *s == *t; s++, t++)
                 if (*s == '\0' || *s == '\t')
                         return 0;
         return *s - *t;
 }
+
+///*
+// * _qsort:	Sort v[left]...v[right] into increasing order.
+// */
+//void _qsort(void *line[], int left, int right, compar fn, int ntab)
+//{
+//	size_t i, last;
+//
+//	if (left >= right)		/* do nothing if array contains */
+//		return;			/* fewer than two elements */
+//
+//	swap(line, left, (left + right)/2);
+//	last = left;
+//
+//	/*
+//	 * Perform sort in either the direct or the reverse order.
+//	 */
+//	if (!state.reverse) {
+//		for (i = left+1; (int)i <= right; i++)
+//			if (nsort(line[i], line[left], fn, ntab) < 0)
+//				swap(line, ++last, i);
+//	} else
+//		for (i = left+1; (int)i <= right; i++)
+//			if (nsort(line[i], line[left], fn, ntab) > 0)
+//				swap(line, ++last, i);
+//
+//	swap(line, left, last);
+//	_qsort(line, left, last-1, fn, ntab);
+//	_qsort(line, last+1, right, fn, ntab);
+//}
+//
+///*
+// * nsort:	Prepare string for sort function, filter numbers and letters,
+// * recursive call to sort function; Separating this section of the function
+// * from the body of qsort, has enabled shorter reverse '-r' code in qsort.
+// */
+//static int nsort(unsigned char *left, unsigned char *right, compar fn, int ntab)
+//{
+//	unsigned char *l_pt, *r_pt;
+//	int res = 0;
+//	bool b1, b2, p1, p2;
+//	b1 = b2 = p1 = p2 = false;
+//	l_pt = left, r_pt = right;
+//
+//	/*
+//	 * Move to desired tab.
+//	 */
+//	if (ntab) {
+//		if ((left = jumptotab(left, ntab)) == NULL)
+//			left = l_pt, p1 = true;
+//		if ((right = jumptotab(right, ntab)) == NULL)
+//			right = r_pt, p2 = true;
+//		/*
+//		 * If either pointers returns null, return 0, the values are
+//		 * not to be swapped.
+//		 */
+//		if (p1 == true || p2 == true)
+//			return 0;
+//	}
+//
+//	/*
+//	 * Remove redundant char.
+//	 */
+//	left = jumptochar(left);
+//	right = jumptochar(right);
+//
+//	if (state.numeric) {
+//		if (isdigit(*left))
+//			b1 = true;
+//		if (isdigit(*right))
+//			b2 = true;
+//	}
+//
+//	/*
+//	 * Return either alphabetical or numerical order.
+//	 */
+//	if (b1 && b2) {
+//		res = numcmp(left, right);
+//		if (!res && (*left != '\0' || *left != '\t'))
+//			res = nsort(++left, ++right, fn, ntab);
+//	} else {
+//		res = (*fn)(left, right);
+//		if (!res && (*left != '\0' || *left != '\t'))
+//			res = nsort(++left, ++right, fn, ntab);
+//	}
+//
+//        return res;
+//}

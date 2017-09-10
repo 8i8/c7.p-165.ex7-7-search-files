@@ -135,7 +135,7 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 static unsigned char *readfile(struct Folio *folio, unsigned char* mem, size_t i)
 {
 	FILE *fp;
-	size_t j;	/* j checks that it is not the first char of a file */
+	size_t j;	/* Simply to check that it is not the first char of a file */
 	int c;
 	j = 0;
 	fp = fopen((char*)folio->files[i].f_name.name, "r");
@@ -145,12 +145,12 @@ static unsigned char *readfile(struct Folio *folio, unsigned char* mem, size_t i
 			(folio->files[i].f_lines)++, folio->t_lines++;
 		*mem++ = (unsigned char)c, j++;
 	}
-	/* If there is no new line char in the previous place, the line
+	/* If there is no new line char in the previous place; The line
 	 * has not yet been counted; Count it. */
 	if(j > 0 && *(mem-1) != '\n')
 		(folio->files[i].f_lines)++, folio->t_lines++;
 	/* This line solves an out by one error introduced by the offset
-	 * between te count and the index in the Line structs */
+	 * between the count and the index in the Line structs */
 	folio->t_lines++;
 
 	*mem++ = '\0';
@@ -172,7 +172,7 @@ static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const 
 			(folio->files[i].f_lines)++, folio->t_lines++;
 		*mem++ = (char)c, k++;
 	}
-	/* If there is no new line char in the previous place, the line
+	/* If there is no new line char in the previous place; The line
 	 * has not yet been counted; Count it. */
 	if(k > 0 && *(mem-1) != '\n')
 		(folio->files[i].f_lines)++, folio->t_lines++;
@@ -234,7 +234,7 @@ static void assignlines(struct Folio *folio)
 }
 
 /*
- * loadfolio:	For given folio struct create memory for and read in the file
+ * loadfolio:	For given folio struct create required memory, read in the file
  * contents, or the string, into an array of pointers; Use one string for each
  * line.
  */
@@ -245,15 +245,14 @@ void loadfolio(struct Folio *folio)
 	unsigned char *mem;
 
 	/* Request required memory for all strings*/
-	if ((folio->memory = malloc(folio->t_len*sizeof(char))) == NULL)
+	if ((folio->memory = malloc(folio->t_len*sizeof(char)*10)) == NULL)
 		printf("error:	malloc failed to assign memory in loadfolio(), memory\n");
 
 	/* set pointer to start of memory block */
 	mem = folio->memory;
 
-	/* Copy each file onto allocated memory, set each entry point and count
+	/* For each file copy onto allocated memory, set each entry point and count
 	 * new line char for struct creation that follows */
-	/* TODO the value of i used when storing the file f_lines is inversed */
 	for (i = 0; i < folio->t_files; i++)
 	{
 		/* Count \n's and transcribe form source to memory. */
@@ -262,12 +261,11 @@ void loadfolio(struct Folio *folio)
 		else
 			mem = readstring(folio, mem, i);
 	}
+
 	/* Reset to start address. */
 	mem = folio->memory;
 
 	/* Memory for pointer array and structs */
-	/* TODO This memory allocation needs to be made in one block in
-	 * order that the struct array be passable to qsort. */
 	alloclines(folio);
 	assignlines(folio);
 
@@ -490,9 +488,13 @@ void printfolio(struct Folio folio)
 						folio.files[i].lines[j].line);
 }
 
+/*
+ * freeall:	Free all allocated memory.
+ */
 void freeall(struct Folio *folio)
 {
 	free(linesArray);
 	free(folio->memory);
 	free(folio->files);
 }
+
