@@ -8,12 +8,10 @@
 
 int main(int argc, char *argv[])
 {
-	//size_t i;
-
 	if (argc > 1)
 		settings(argc, argv);
 
-	if (folio.t_file)
+	if (folio.t_files)
 		loadfolio(&folio);
 	else
 		printf("usage:	%s <file1> <file2>\n", *argv);
@@ -23,9 +21,9 @@ int main(int argc, char *argv[])
 	/* Sort input */
 	//sortsection((void**)lineptr, 0, pt-1, state.func, 0);
 	
-	///* If required, add line spacers. */
+	/* If required, add line spacers. */
 	//if (state.directory)
-	//	pt = addspacer(lineptr, MAXLINES, pt, 0);
+	//	pt = addspacer(lineptr, folio.t_files, pt, 0);
 
 	//i = 1;
 	///* Sort using argv */
@@ -47,7 +45,9 @@ int main(int argc, char *argv[])
 	//}
 
 	printfolio(folio);
-	//printhash(lineptr, pt);
+	//printhash(, pt);
+
+	freeall(&folio);
 
 	return 0;
 }
@@ -68,27 +68,5 @@ void settings(int argc, char*argv[])
 			getflags(i, argv);
 
 	getinput(&folio, argc, argv);
-}
-
-/*
- * sortsection:	Switch, selects the sort function for qsort, see program states.
- */
-void sortsection(void *lineptr[], int left, int right, int func, int ntab)
-{
-	switch (func) {
-		case simple:
-			_qsort((void**)lineptr, left, right, strsimp, ntab);
-			break;
-		case alpha:
-			_qsort((void**)lineptr, left, right, stnsort, ntab);
-			break;
-		case fold:
-			_qsort((void**)lineptr, left, right, strfold, ntab);
-			break;
-		case nosort:
-			break;
-		default:
-			break;
-	}
 }
 

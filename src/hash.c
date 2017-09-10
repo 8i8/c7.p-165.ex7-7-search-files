@@ -4,9 +4,6 @@
 #include "search-files.h"
 #include <string.h>
 
-#include <ctype.h>
-#include <assert.h>
-
 #define P1 		317		/* prime smaller than s^16/200 */
 #define P2 		65521		/* prime smaller than 2^16 */
 #define P3		281539415969051	/* prime smaller than 2^64/65521 */
@@ -38,10 +35,8 @@ static struct Line *lookup(unsigned char *s)
 	struct Line *ln;
 
 	for (ln = hashtab[hash(s)]; ln != NULL; ln = ln->next)
-		if (strcmp((char*)s, (char*)ln->line) == 0) {
-			assert(isprint(ln->line[0]));
+		if (strcmp((char*)s, (char*)ln->line) == 0)
 			return ln;
-		}
 
 	return NULL;
 }
@@ -55,19 +50,24 @@ static void makenode(struct Folio *folio, const size_t i, const size_t j)
 	struct Line *ln;
 	unsigned hashval;
 
-	if ((ln = lookup(folio->files[i].lines[j][0].line)) != NULL)
+	if ((ln = lookup(folio->files[i].lines[j].line)) != NULL)
 	{
-		ln->next = &folio->files[i].lines[j][0];
+		ln->next = &folio->files[i].lines[j];
 		if (!ln->isTrue)
 			lineptr[pt++] = ln->line;
-		lineptr[pt++] = folio->files[i].lines[j][0].line;
-		ln->isTrue = folio->files[i].lines[j][0].isTrue = true;
+		lineptr[pt++] = folio->files[i].lines[j].line;
+		ln->isTrue = folio->files[i].lines[j].isTrue = true;
 	} else {
-		hashval = hash(folio->files[i].lines[j][0].line);
-		/* Move existing struct link, if value present, to the current struct */
-		folio->files[i].lines[j][0].next = hashtab[hashval];
-		/* Put new struct into hash bucket first position */
-		hashtab[hashval] = &folio->files[i].lines[j][0];
+		hashval = hash(folio->files[i].lines[j].line);
+		/*
+		 * Move any existing structs to the `next` var in
+		 * the current struct, if set to NULL, move that.
+		 */
+		folio->files[i].lines[j].next = hashtab[hashval];
+		/*
+		 * Put new struct into hash bucket, first place.
+		 */
+		hashtab[hashval] = &folio->files[i].lines[j];
 	}
 }
 
@@ -77,11 +77,12 @@ static void makenode(struct Folio *folio, const size_t i, const size_t j)
 void hashtable(struct Folio *folio)
 {
 	size_t i, j;
+	i = j = 0;
 
-	for (i = 0; i < folio->t_file; i++) {
-		for (j = 0; j < folio->files[i].f_count; j++)
+	for (i = 0; i < folio->t_files; i++) {
+		for (j = 0; j < folio->files[i].f_lines; j++)
 		{
-			if (folio->files[i].lines[j][0].line[0] != '\0') {
+			if (folio->files[i].lines[j].line[0] != '\0') {
 				makenode(folio, i, j);
 			}
 		}

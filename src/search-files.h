@@ -33,9 +33,9 @@ typedef short int bool;
 
 /* Global flags */
 struct State {
-	unsigned int func;				/* Define which function to use */
-	unsigned int numeric	: 1;				/* use numeric sort in qsort */
-	unsigned int reverse	: 1;				/* reverse search order */
+	unsigned int func;			/* Define which function to use */
+	unsigned int numeric	: 1;		/* use numeric sort in qsort */
+	unsigned int reverse	: 1;		/* reverse search order */
 	unsigned int remempty	: 1;
 	unsigned int directory	: 1;
 	unsigned int rsort	: 1;
@@ -58,31 +58,30 @@ struct Line {
 };
 
 struct File {
-	struct Line **lines;
+	struct Line *lines;
 	struct F_name f_name;
 	unsigned char *str;
 	unsigned int flag : 1;
-	size_t f_count;
+	size_t f_lines;			/* Character count for entire file */
 	size_t f_len;
 };
 
 struct Folio {
 	struct File *files;
 	unsigned char *memory;
-	size_t t_file;
-	size_t t_line;
+	size_t t_files;
+	size_t t_lines;
 	size_t t_len;
 };
 
 extern struct State state;
 extern struct Folio folio;
 extern unsigned char *lineptr[];
+extern struct Line *linesArray;
 extern size_t pt;
 
 /* Main */
 void settings(int argc, char*argv[]);
-void inputargs(int argc, char*argv[]);
-void sortsection(void *lines[], int left, int right, int func, int ntab);
 void resetglobals(void);
 
 /* i/o */
@@ -90,16 +89,18 @@ void getflags(int argc, char *argv[]);
 void getinput(struct Folio *folio, int argc, char *argv[]);
 void loadfolio(struct Folio *folio);
 size_t readlines(unsigned char *lineptr[], size_t maxlines);
-void printhash(unsigned char **lines, size_t lp);
+void printhash(struct Folio *folio);
 size_t deleteline(unsigned char *lineptr[], int line, size_t nlines);
 void settabs(char n[]);
 size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines, size_t index, size_t nlines);
 void printfolio(struct Folio folio);
+void freeall(struct Folio *folio);
 
 /* Hash table */
 void hashtable(struct Folio *folio);
 
 /* Sort */
+void sortsection(void *lines[], int left, int right, int func, int ntab);
 void _qsort(void *lineptr[], int left, int right, compar fn, int ntab);
 size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, int ntab);
 size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, int ntab);
