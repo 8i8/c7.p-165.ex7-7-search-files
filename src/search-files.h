@@ -89,7 +89,7 @@ void getflags(int argc, char *argv[]);
 void getinput(struct Folio *folio, int argc, char *argv[]);
 void loadfolio(struct Folio *folio);
 size_t readlines(unsigned char *lineptr[], size_t maxlines);
-void printhash(unsigned char **lines, size_t lp);
+void printhash(struct Folio *folio);
 size_t deleteline(unsigned char *lineptr[], int line, size_t nlines);
 void settabs(char n[]);
 size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines, size_t index, size_t nlines);

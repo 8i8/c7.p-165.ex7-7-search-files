@@ -77,6 +77,7 @@ static void makenode(struct Folio *folio, const size_t i, const size_t j)
 void hashtable(struct Folio *folio)
 {
 	size_t i, j;
+	i = j = 0;
 
 	for (i = 0; i < folio->t_files; i++) {
 		for (j = 0; j < folio->files[i].f_lines; j++)
