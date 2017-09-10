@@ -147,8 +147,12 @@ static unsigned char *readfile(struct Folio *folio, unsigned char* mem, size_t i
 	}
 	/* If there is no new line char in the previous place, the line
 	 * has not yet been counted; Count it. */
-	if(j > 1 && *(mem-1) != '\n')
+	if(j > 0 && *(mem-1) != '\n')
 		(folio->files[i].f_lines)++, folio->t_lines++;
+	/* This line solves an out by one error introduced by the offset
+	 * between te count and the index in the Line structs */
+	folio->t_lines++;
+
 	*mem++ = '\0';
 	fclose(fp);
 
@@ -163,15 +167,19 @@ static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const 
 	size_t j, k;	/* k checks that it is not the first char of a line */
 	unsigned char c;
 
-	for (j = 0; (c = *(folio->files[i].str+j)) != '\0'; j++) {
+	for (j = 0, k = 0; (c = *(folio->files[i].str+j)) != '\0'; j++) {
 		if (c == '\n' && (k > 0 && (*(mem-1) != '\\')))
 			(folio->files[i].f_lines)++, folio->t_lines++;
 		*mem++ = (char)c, k++;
 	}
 	/* If there is no new line char in the previous place, the line
 	 * has not yet been counted; Count it. */
-	if(k > 1 && *(mem-1) != '\n')
+	if(k > 0 && *(mem-1) != '\n')
 		(folio->files[i].f_lines)++, folio->t_lines++;
+	/* This line solves an out by one error introduced by the offset
+	 * between te count and the index in the Line structs */
+	folio->t_lines++;
+
 	*mem++ = '\0';
 
 	return mem;
@@ -196,10 +204,10 @@ static void alloclines(struct Folio *folio)
 {
 	size_t i;
 
-	if ((linesArray = malloc(folio->t_lines*(sizeof(struct Line))+100)) == NULL)
+	if ((linesArray = malloc(folio->t_lines*(sizeof(struct Line)))) == NULL)
 		printf("error:	malloc failed to assign memory in alloclines(), Line\n");
 
-	for (i = 0; i <= folio->t_lines; i++) {
+	for (i = 0; i < folio->t_lines; i++) {
 		linesArray[i].line = NULL;
 		linesArray[i].name = NULL;
 		linesArray[i].next = NULL;
@@ -337,7 +345,7 @@ size_t insertline(unsigned char *lineptr[], unsigned char* line, size_t maxlines
 	size_t i = 0;
 
 	/* If there is room in alloc buffer ... */
-	if (nlines >= maxlines || (p = alloc(strlen((char*)line)+1)) == NULL) {
+	if (nlines >= maxlines || (p = alloc(strlen((char*)line))) == NULL) {
 		printf("Error alloc: insufficient place in allocbuf[]\n");
 		return 0;
 	}
