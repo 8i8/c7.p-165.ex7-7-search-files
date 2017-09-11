@@ -24,7 +24,7 @@ enum boolean { false, true };
 enum function { simple, alpha, fold, nosort };
 
 /* Function pointers */
-typedef int (*comp)(const void *, const void *, const void *);
+typedef int (*comp)(const void *, const void *);
 extern comp strsimp;
 extern comp stnsort;
 extern comp strfold;
@@ -72,6 +72,7 @@ struct Folio {
 	size_t t_files;
 	size_t t_lines;
 	size_t t_len;
+	size_t ntab;
 };
 
 extern struct State state;
@@ -102,6 +103,6 @@ void hashtable(struct Folio *folio);
 /* Sort */
 void sortsection(void *lines, int nel, int width, int func);
 void _qsort(void *base, size_t nel, size_t width, comp fn);
-size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, int ntab);
-size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, int ntab);
+size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, size_t ntab);
+size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, size_t ntab);
 

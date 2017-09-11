@@ -245,7 +245,7 @@ void loadfolio(struct Folio *folio)
 	unsigned char *mem;
 
 	/* Request required memory for all strings*/
-	if ((folio->memory = malloc(folio->t_len*sizeof(char)*10)) == NULL)
+	if ((folio->memory = malloc(folio->t_len*sizeof(char))) == NULL)
 		printf("error:	malloc failed to assign memory in loadfolio(), memory\n");
 
 	/* set pointer to start of memory block */
@@ -453,7 +453,7 @@ void printhash(struct Folio *folio)
 {
 	size_t i;
 
-	for (i = 0; i < folio->t_lines; i++)
+	for (i = 0; i < folio->t_lines-1; i++)
 		if (state.linenum)
 			printf("%3lu: %s\n", i+1, linesArray[i].line);
 		else

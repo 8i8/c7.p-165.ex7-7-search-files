@@ -21,6 +21,7 @@ struct Folio folio = {
 	NULL,
 	0,
 	0,
+	0,
 	0
 };
 
