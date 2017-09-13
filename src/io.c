@@ -285,20 +285,20 @@ void settabs(char n[])
 /*
  * printline:	Print given node and recursivly any that are linked.
  */
-void printline(struct Line line)
+void printline(struct Line *line)
 {
 	if (state.linenum)
-		printf("%s:%lu:%s\n", line.name->name, line.num, line.line);
+		printf("%s:%lu:%s\n", line->name->name, line->num, line->line);
 	else
-		printf("%s:%s\n", line.name->name, line.line);
-	if (line.next != NULL)
-		printline(*line.next);
+		printf("%s:%s\n", line->name->name, line->line);
+	if (line->next != NULL)
+		printline(line->next);
 }
 
 /*
  * printhash:	Write output.
  */
-void printhash(struct Line lineptr[], size_t len)
+void printhash(struct Line *lineptr[], size_t len)
 {
 	size_t i;
 

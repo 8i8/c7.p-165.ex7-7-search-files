@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	//}
 
 	//printfolio(folio);
-	printhash(lineptr[0], pt);
+	printhash(lineptr, pt);
 
 	freeall(&folio);
 

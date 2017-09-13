@@ -34,6 +34,7 @@ static unsigned long hash(unsigned char *s)
 static struct Line *lookup(unsigned char *s)
 {
 	struct Line *ln;
+	ln = NULL;
 
 	for (ln = hashtab[hash(s)]; ln != NULL; ln = ln->next)
 		if (strcmp((char*)s, (char*)ln->line) == 0)
@@ -53,21 +54,16 @@ static void makenode(struct Folio *folio, const size_t i, const size_t j)
 
 	if ((ln = lookup(folio->files[i].lines[j].line)) != NULL)
 	{
-		ln->next = &folio->files[i].lines[j];
-		if (!ln->isTrue)
-			lineptr[pt++] = ln;
-		lineptr[pt++] = &folio->files[i].lines[j];
 		ln->isTrue = folio->files[i].lines[j].isTrue = true;
+		while (ln->next != NULL)
+			ln = ln->next;
+		ln->next = &folio->files[i].lines[j];
+		lineptr[pt++] = ln;
 	} else {
 		hashval = hash(folio->files[i].lines[j].line);
-		/*
-		 * Move any existing structs to the `next` var in
-		 * the current struct, if set to NULL, move that.
-		 */
+		/* Move NULL trminator to the `next` struct */
 		folio->files[i].lines[j].next = hashtab[hashval];
-		/*
-		 * Put new struct into hash bucket, first place.
-		 */
+		/* Put new struct into a hash bucket. */
 		hashtab[hashval] = &folio->files[i].lines[j];
 	}
 }
@@ -78,15 +74,10 @@ static void makenode(struct Folio *folio, const size_t i, const size_t j)
 void hashtable(struct Folio *folio)
 {
 	size_t i, j;
-	i = j = 0;
 
-	for (i = 0; i < folio->t_files; i++) {
+	for (i = 0; i < folio->t_files; i++)
 		for (j = 0; j < folio->files[i].f_lines; j++)
-		{
-			if (folio->files[i].lines[j].line[0] != '\0') {
+			if (*folio->files[i].lines[j].line != '\0')
 				makenode(folio, i, j);
-			}
-		}
-	}
 }
 
