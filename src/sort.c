@@ -15,7 +15,7 @@ static void swap(void *string, size_t i, size_t j, size_t width);
 static unsigned char* jumptochar(unsigned char *c);
 static unsigned char* jumptotab(unsigned char *c, size_t ntab);
 static int sortfolded(const void *s1, const void *s2);
-static int numcmp(unsigned char *s1, unsigned char *s2);
+//static int numcmp(const void *l1, const void *l2);
 static int strtcmp(const void *s, const void *t);
 static int sortalpha(const void *s1, const void *s2);
 static int strtcmp(const void *s, const void *t);
@@ -84,8 +84,8 @@ static size_t compfields(unsigned char *lineptr[], size_t left, size_t right, si
 	unsigned char comp[MAXLEN];
 	unsigned char line[MAXLEN];
 	unsigned char *c;
-	size_t orig, mark;
-        orig = mark = left;
+	size_t mark;
+        mark = left;
 
 	/*
 	 * Copy the first line as a base for concatenation, and again as a
@@ -93,7 +93,7 @@ static size_t compfields(unsigned char *lineptr[], size_t left, size_t right, si
 	 */
 	strcpy((char*)comp, (char*)lineptr[left]);
 	strcpy((char*)line, (char*)lineptr[left]);
-	nlines = deleteline(lineptr, left++, nlines);
+	//nlines = deleteline(lineptr, left++, nlines);
 
 	while (left <= right)
 	{
@@ -109,13 +109,13 @@ static size_t compfields(unsigned char *lineptr[], size_t left, size_t right, si
 			strcat((char*)line, ", ");
 			strcat((char*)line, (char*)c);
 
-			nlines = deleteline(lineptr, mark, nlines);
+			//nlines = deleteline(lineptr, mark, nlines);
 		} else
 			mark++;
 		left++;
 	}
 
-	nlines = insertline(lineptr, line, MAXLINES, orig, nlines);
+	//nlines = insertline(lineptr, line, MAXLINES, orig, nlines);
 
 	return nlines;
 }
@@ -259,8 +259,9 @@ size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, size_
 
 	while (++i < nlines)
 		if (!firstcmp(lineptr[i-1], lineptr[i], ntab) && 
-				(!isdigit(*lineptr[i-1]) || !isdigit(*lineptr[i])))
-			nlines = insertline(lineptr, (int)'\0', maxlines, i++, nlines);
+				(!isdigit(*lineptr[i-1]) || !isdigit(*lineptr[i]))) {
+			 i=maxlines;//nlines = insertline(lineptr, (int)'\0', maxlines, i++, nlines);
+		}
 
 	return nlines;
 }
@@ -296,8 +297,8 @@ static void swap(void *string, size_t i, size_t j, size_t width)
  */
 static unsigned char* jumptochar(unsigned char *c)
 {
-//	while (!isalnum(*c) && *c != '\0' && *c != '\t')
-//		c++;
+	while (!isalnum(*c) && *c != '\0' && *c != '\t')
+		c++;
 	return c;
 }
 
@@ -306,9 +307,9 @@ static unsigned char* jumptochar(unsigned char *c)
  */
 static unsigned char* jumptotab(unsigned char *c, size_t ntab)
 {
-//	while (*c != '\0')
-//		if (*c++ == '\t' && --ntab == 0)
-//			return c;
+	while (*c != '\0')
+		if (*c++ == '\t' && --ntab == 0)
+			return c;
 
 	return NULL;
 }
@@ -318,68 +319,77 @@ static unsigned char* jumptotab(unsigned char *c, size_t ntab)
  */
 static int sortascii(unsigned char *c, bool fold)
 {
-//	if (isupper(*c))
-//		if (fold)
-//			return *c = tolower(*c);
-//		else
-//			return *c += 57;
-//	else if (islower(*c))
-//		return *c;
-//	else if (isdigit(*c))
-//		return *c += 118;
+	if (isupper(*c))
+		if (fold)
+			return *c = tolower(*c);
+		else
+			return *c += 57;
+	else if (islower(*c))
+		return *c;
+	else if (isdigit(*c))
+		return *c += 118;
 	return 0;
 }
 
 /*
  * sortalpha:	Sorting character maps.
  */
-static int sortalpha(const void *s1, const void *s2)
+static int sortalpha(const void *l1, const void *l2)
 {
+	struct Line *s1, *s2;
 	unsigned char c1, c2;
-//	c1 = *s1, c2 = *s2;
-//	c1 = sortascii(&c1, false);
-//	c2 = sortascii(&c2, false);
+	s1 = (struct Line*)l1, s2 = (struct Line*)l2;
+
+	c1 = *s1->line, c2 = *s2->line;
+	c1 = sortascii(&c1, false);
+	c2 = sortascii(&c2, false);
 	return c1 - c2;
 }
 
 /*
  * sortfolded:	Sort string with Upper case folded in.
  */
-static int sortfolded(const void *s1, const void *s2)
+static int sortfolded(const void *l1, const void *l2)
 {
+	struct Line *s1, *s2;
 	unsigned char c1, c2;
-//	c1 = *s1, c2 = *s2;
-//	c1 = sortascii(&c1, true);
-//	c2 = sortascii(&c2, true);
+	s1 = (struct Line*)l1, s2 = (struct Line*)l2;
+
+	c1 = *s1->line, c2 = *s2->line;
+	c1 = sortascii(&c1, true);
+	c2 = sortascii(&c2, true);
 	return c1 - c2;
 }
 
 /*
  * Compare s1 and s2 numerically.
  */
-static int numcmp(unsigned char *s1, unsigned char *s2)
-{
+//static int numcmp(const void *l1, const void *l2)
+//{
+//	struct Line *s1, *s2;
+//	s1 = (struct Line*)l1, s2 = (struct Line*)l2;
+//
 //	double v1, v2;
-//	v1 = atof((char*)s1);
-//	v2 = atof((char*)s2);
+//	v1 = atof((char*)s1->line);
+//	v2 = atof((char*)s2->line);
 //	if (v1 < v2)
 //		return -1;
 //	else if (v1 > v2)
 //		return 1;
-	return 0;
-}
+//	return 0;
+//}
 
 /*
  * strtcmp:	String compare that will stop at a tabstop.
  */
 static int strtcmp(const void *s, const void *t)
 {
-	char *u, *v;
-	u = (char*)s, v = (char*)t;
-//        for ( ; *s == *t; s++, t++)
-//                if (*s == '\0' || *s == '\t')
-//                        return 0;
-        return *u - *v;
+	struct Line *u, *v;
+	u = (struct Line*)s, v = (struct Line*)t;
+        for ( ; *u->line == *v->line; u->line++, v->line++)
+                if (*u->line == '\0' || *v->line == '\t')
+                        return 0;
+        return *u->line - *v->line;
 }
 
 ///*

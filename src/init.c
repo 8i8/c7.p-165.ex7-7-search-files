@@ -19,6 +19,7 @@ struct State state = {
 struct Folio folio = {
 	NULL,
 	NULL,
+	NULL,
 	0,
 	0,
 	0,
@@ -37,8 +38,6 @@ void resetglobals(void)
 	state.rsort = 		false;
 	state.indx =		false;
 }
-
-struct Line *linesArray;
 
 size_t pt = 0;
 

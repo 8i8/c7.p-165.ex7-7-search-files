@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	hashtable(&folio);
 
 	/* Sort input */
-	//sortsection((void**)linesArray, folio.t_lines, sizeof(struct Line), state.func);
+	//sortsection((void**)lineptr[0], folio.t_lines, sizeof(struct Line), state.func);
 	
 	/* If required, add line spacers. */
 	//if (state.directory)
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	//}
 
 	//printfolio(folio);
-	printhash(&folio);
+	printhash(lineptr[0], pt);
 
 	freeall(&folio);
 

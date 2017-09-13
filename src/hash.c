@@ -9,6 +9,7 @@
 #define P3		281539415969051	/* prime smaller than 2^64/65521 */
 
 static struct Line *hashtab[P2];
+struct Line *lineptr[100];
 
 /*
  * hash:	form hash value for string s
@@ -54,8 +55,8 @@ static void makenode(struct Folio *folio, const size_t i, const size_t j)
 	{
 		ln->next = &folio->files[i].lines[j];
 		if (!ln->isTrue)
-			lineptr[pt++] = ln->line;
-		lineptr[pt++] = folio->files[i].lines[j].line;
+			lineptr[pt++] = ln;
+		lineptr[pt++] = &folio->files[i].lines[j];
 		ln->isTrue = folio->files[i].lines[j].isTrue = true;
 	} else {
 		hashval = hash(folio->files[i].lines[j].line);

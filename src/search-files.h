@@ -54,6 +54,7 @@ struct Line {
 	struct Line *next;
 	size_t len;
 	size_t num;
+	size_t id;
 	unsigned int isTrue : 1;
 };
 
@@ -68,7 +69,8 @@ struct File {
 
 struct Folio {
 	struct File *files;
-	unsigned char *memory;
+	unsigned char *memory;		/* Pointer to the text block */
+	struct Line *linesArray;	/* Pointer to the Linres block */
 	size_t t_files;
 	size_t t_lines;
 	size_t t_len;
@@ -77,8 +79,7 @@ struct Folio {
 
 extern struct State state;
 extern struct Folio folio;
-extern unsigned char *lineptr[];
-extern struct Line *linesArray;
+extern struct Line *lineptr[];
 extern size_t pt;
 
 /* Main */
@@ -90,7 +91,7 @@ void getflags(int argc, char *argv[]);
 void getinput(struct Folio *folio, int argc, char *argv[]);
 void loadfolio(struct Folio *folio);
 size_t readlines(unsigned char *lineptr[], size_t maxlines);
-void printhash(struct Folio *folio);
+void printhash(struct Line lineptr[], size_t len);
 size_t deleteline(unsigned char *lineptr[], int line, size_t nlines);
 void settabs(char n[]);
 size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines, size_t index, size_t nlines);
