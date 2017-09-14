@@ -78,15 +78,24 @@ static size_t filesize(FILE *fp)
 	return len;
 }
 
+struct File definefile(struct File file, unsigned char* name, short int type, size_t len)
+{
+	file.f_name.name = name;
+	file.flag = type;
+	folio.t_len += file.f_len = len;
+	return file;
+}
+
 /*
- * getinput:	Input files from supplied arguments, counting the total length
- * for use in total memory assignment.
+ * getinput:	Input files and strings from supplied arguments, counting the
+ * total length for use in total memory assignment.
  */
 void getinput(struct Folio *folio, int argc, char *argv[])
 {
 	FILE *fp;
 	size_t i, j;
 
+	/* Count and files or strings, allocate file structs */
 	for (i = 1, j = 0; i < (unsigned)argc; i++)
 		if (*argv[i] != '-')
 			j++;
@@ -97,20 +106,23 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 	for (i = 0; i < j; i++)
 		folio->files[i] = initfile(folio->files[i]);
 
-	/* Input files if address given */
+	/* Input argv if not a flag */
 	i = j = 0;
 	while (++i < (unsigned int)argc)
 		if (*argv[i] != '-') {
 			if ((fp = fopen(argv[i], "r")) != NULL) {
-				folio->files[j].f_name.name = (unsigned char*)argv[i];
-				folio->files[j].flag = 1;
-				folio->t_len += folio->files[j].f_len = filesize(fp);
+				folio->files[j] = definefile(
+						folio->files[j],
+						(unsigned char*)argv[i],
+						file,
+						filesize(fp));
 				fclose(fp);
-			} else {
-				folio->files[j].str = (unsigned char*)argv[i];
-				folio->files[j].f_name.name = (unsigned char*)"$string";
-				folio->t_len += folio->files[j].f_len = strlen(argv[i]);
-			}
+			} else
+				folio->files[j] = definefile(
+						folio->files[j],
+						(unsigned char*)argv[i],
+						file,
+						strlen(argv[i]));
 			j++;
 		}
 }
@@ -149,7 +161,7 @@ static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const 
 	size_t j, k;	/* k checks that it is not the first char of a line */
 	int c;
 
-	for (j = 0, k = 0; (c = *(folio->files[i].str+j)) != '\0'; *mem++ = (unsigned char)c, j++, k++)
+	for (j = 0, k = 0; (c = *(folio->files[i].f_name.name+j)) != '\0'; *mem++ = (unsigned char)c, j++, k++)
 		if (c == '\n' && (k > 0 && (*(mem-1) != '\\')))
 			folio->files[i].f_lines++, folio->t_lines++, c = '\0';
 
@@ -289,7 +301,7 @@ void printfolio(struct Folio folio)
 	else
 		for (i = 0; i < folio.t_files; i++)
 			for (j = 0; j < folio.files[i].f_lines; j++)
-				printline(&folio.files[i-1].lines[j]);
+				printline(&folio.files[i].lines[j]);
 }
 
 /*

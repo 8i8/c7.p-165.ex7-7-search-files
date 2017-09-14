@@ -22,6 +22,7 @@
 typedef short bool;
 enum boolean { false, true };
 enum function { simple, alpha, fold, nosort };
+enum filetype { string, file };
 
 /* Function pointers */
 typedef int (*comp)(const void *, const void *);
@@ -61,7 +62,6 @@ struct Line {
 struct File {
 	struct Line *lines;
 	struct F_name f_name;
-	unsigned char *str;
 	unsigned int flag : 1;
 	size_t f_lines;			/* Character count for entire file */
 	size_t f_len;

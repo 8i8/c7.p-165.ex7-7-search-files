@@ -48,7 +48,6 @@ struct File initfile(struct File file)
 {
 	file.lines = NULL;
 	file.f_name.name = NULL;
-	file.str = NULL;
 	file.f_lines = 0;
 	file.f_len = 0;
 	file.flag = 0;
