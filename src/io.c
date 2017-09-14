@@ -132,21 +132,21 @@ void getinput(struct Folio *folio, int argc, char *argv[])
  * characters to obtain the line count whilst doing so, convert new line to nul
  * terminators.
  */
-static unsigned char *readfile(struct Folio *folio, unsigned char* mem, size_t i)
+static unsigned char *readfile(struct File *file, unsigned char* mem)
 {
 	FILE *fp;
-	size_t j;	/* Check that this is not the first char of a file */
+	size_t i;	/* Check that this is not the first char of a file */
 	int c;
 
-	fp = fopen((char*)folio->files[i].f_name.name, "r");
+	fp = fopen((char*)file->f_name.name, "r");
 
-	for (j = 0; (c = getc(fp)) != EOF; *mem++ = (unsigned char)c, j++)
-		if (c == '\n' && (j > 0 && (*(mem-1) != '\\')))
-			folio->files[i].f_lines++, folio->t_lines++, c = '\0';
+	for (i = 0; (c = getc(fp)) != EOF; *mem++ = (unsigned char)c, i++)
+		if (c == '\n' && (i > 0 && (*(mem-1) != '\\')))
+			file->f_lines++, folio.t_lines++, c = '\0';
 
 	/* If there is no nul terminator, count line */
-	if(j > 0 && *(mem-1) != '\0')
-		folio->files[i].f_lines++, folio->t_lines++, *mem++ = '\0';
+	if(i > 0 && *(mem-1) != '\0')
+		file->f_lines++, folio.t_lines++, *mem++ = '\0';
 
 	fclose(fp);
 
@@ -156,18 +156,18 @@ static unsigned char *readfile(struct Folio *folio, unsigned char* mem, size_t i
 /*
  * readstring:	Copy argument string into folio memory block.
  */
-static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const size_t i)
+static unsigned char* readstring(struct File *file, unsigned char* mem)
 {
-	size_t j, k;	/* k checks that it is not the first char of a line */
+	size_t i, j;	/* k checks that it is not the first char of a line */
 	int c;
 
-	for (j = 0, k = 0; (c = *(folio->files[i].f_name.name+j)) != '\0'; *mem++ = (unsigned char)c, j++, k++)
-		if (c == '\n' && (k > 0 && (*(mem-1) != '\\')))
-			folio->files[i].f_lines++, folio->t_lines++, c = '\0';
+	for (i = 0, j = 0; (c = *(file->f_name.name+i)) != '\0'; *mem++ = (unsigned char)c, i++, j++)
+		if (c == '\n' && (j > 0 && (*(mem-1) != '\\')))
+			file->f_lines++, folio.t_lines++, c = '\0';
 
 	/* If there is no nul terminator, count line */
-	if(k > 0 && *(--mem-1) != '\0')
-		folio->files[i].f_lines++, folio->t_lines++, mem++;
+	if(j > 0 && *(--mem-1) != '\0')
+		file->f_lines++, folio.t_lines++, mem++;
 
 	return mem;
 }
@@ -231,11 +231,11 @@ void loadfolio(struct Folio *folio)
 	/* Copy each string into allocated memory. */
 	for (i = 0; i < folio->t_files; i++)
 		if (folio->files[i].flag)
-			mem = readfile(folio, mem, i);
+			mem = readfile(&folio->files[i], mem);
 		else
-			mem = readstring(folio, mem, i);
+			mem = readstring(&folio->files[i], mem);
 
-	/* Allocate memory to structs and join strings. */
+	/* Allocate memory to structs and set them to point to string addresses. */
 	mem = folio->memory;
 	alloclines(folio);
 	assignlines(folio);
@@ -272,7 +272,7 @@ void printline(struct Line *line)
 }
 
 /*
- * printhash:	Write output.
+ * printhash:	Print structs from hash array.
  */
 void printhash(struct Line *lineptr[], size_t len)
 {
@@ -288,7 +288,7 @@ void printhash(struct Line *lineptr[], size_t len)
 }
 
 /*
- * printfolio:	Basic test of folio struct data.
+ * printfolio:	Print entire folio array.
  */
 void printfolio(struct Folio folio)
 {
