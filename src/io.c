@@ -141,8 +141,12 @@ static unsigned char *readfile(struct File *file, unsigned char* mem)
 	fp = fopen((char*)file->f_name.name, "r");
 
 	for (i = 0; (c = getc(fp)) != EOF; *mem++ = (unsigned char)c, i++)
-		if (c == '\n' && (i > 0 && (*(mem-1) != '\\')))
-			file->f_lines++, folio.t_lines++, c = '\0';
+		if (c == '\n') {
+			if (i == 0)
+				file->f_lines++, folio.t_lines++, c = '\0';
+			else if (*(mem-1) != '\\')
+				file->f_lines++, folio.t_lines++, c = '\0';
+		}
 
 	/* If there is no nul terminator, count line */
 	if(i > 0 && *(mem-1) != '\0')
@@ -162,8 +166,12 @@ static unsigned char* readstring(struct File *file, unsigned char* mem)
 	int c;
 
 	for (i = 0, j = 0; (c = *(file->f_name.name+i)) != '\0'; *mem++ = (unsigned char)c, i++, j++)
-		if (c == '\n' && (j > 0 && (*(mem-1) != '\\')))
-			file->f_lines++, folio.t_lines++, c = '\0';
+		if (c == '\n') {
+			if (i == 0)
+				file->f_lines++, folio.t_lines++, c = '\0';
+			else if (*(mem-1) != '\\')
+				file->f_lines++, folio.t_lines++, c = '\0';
+		}
 
 	/* If there is no nul terminator, count line */
 	if(j > 0 && *(--mem-1) != '\0')
@@ -214,9 +222,8 @@ static void assignlines(struct Folio *folio)
 }
 
 /*
- * loadfolio:	For given folio struct create required memory, read in the file
- * contents, or the string, into an array of pointers; Use one string for each
- * line.
+ * loadfolio:	For given folio struct create required memory and store all
+ * eliments addressed by argv.
  */
 void loadfolio(struct Folio *folio)
 {
@@ -241,6 +248,7 @@ void loadfolio(struct Folio *folio)
 	assignlines(folio);
 
 	for (i = 0; i < folio->t_files; i++)
+		/* k+1 (+1) to skip over the nul terminator. */
 		for (j = 0, k = 0; j < folio->files[i].f_lines; mem += k+1, j++) {
 			folio->files[i].lines[j].line = mem;
 			k = strlen((char*)mem);
@@ -296,8 +304,8 @@ void printfolio(struct Folio folio)
 
 	if (state.reverse)
 		for (i = folio.t_files; i > 0; i--)
-			for (j = 0; j < folio.files[i-1].f_lines; j++)
-				printline(&folio.files[i-1].lines[j]);
+			for (j = folio.files[i-1].f_lines; j > 0; j--)
+				printline(&folio.files[i-1].lines[j-1]);
 	else
 		for (i = 0; i < folio.t_files; i++)
 			for (j = 0; j < folio.files[i].f_lines; j++)

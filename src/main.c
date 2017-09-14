@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
 	if (folio.t_files)
 		loadfolio(&folio);
 	else
-		printf("usage:	%s <file1> <file2>\n", *argv);
-	
+		printf("usage:	%s <file1> <file2> ...\n", *argv);
+
 	hashtable(&folio);
 
 	/* Sort input */

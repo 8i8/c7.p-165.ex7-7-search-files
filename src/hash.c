@@ -34,7 +34,6 @@ static unsigned long hash(unsigned char *s)
 static struct Line *lookup(unsigned char *s)
 {
 	struct Line *ln;
-	ln = NULL;
 
 	for (ln = hashtab[hash(s)]; ln != NULL; ln = ln->next)
 		if (strcmp((char*)s, (char*)ln->line) == 0)
