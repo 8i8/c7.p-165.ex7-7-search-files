@@ -14,6 +14,7 @@
  *	-f, fold lower case to upper case characters
  *	-i, compile for index
  *	-n, numerical sort
+ *	-N, print line numbers
  *	-p, no sort
  *	-r, reverse sort
  *	-s, basic string compare
@@ -23,7 +24,7 @@ void getflags(int argc, char*argv[])
 	int c;
 	size_t i = 0;
 
-	while ((c = *(argv[argc]+(++i)))) {
+	while ((c = *(argv[argc]+(++i))))
 		switch (c) {
 			case 'a':
 				state.func = alpha;
@@ -62,7 +63,6 @@ void getflags(int argc, char*argv[])
 			default:
 				break;
 		}
-	}
 }
 
 /*
@@ -94,17 +94,10 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 	folio->files = malloc(j*sizeof(struct File));
 	folio->t_files = j;
 
-	for (i = 0; i < j; i++) {
-		folio->files[i].lines = NULL;
-		folio->files[i].f_name.name = NULL;
-		folio->files[i].str = NULL;
-		folio->files[i].f_lines = 0;
-		folio->files[i].f_len = 0;
-		folio->files[i].flag = 0;
-	}
+	for (i = 0; i < j; i++)
+		folio->files[i] = initfile(folio->files[i]);
 
 	/* Input files if address given */
-	//i = (unsigned)argc, j = 0;
 	i = j = 0;
 	while (++i < (unsigned int)argc)
 		if (*argv[i] != '-') {
@@ -135,8 +128,8 @@ static unsigned char *readfile(struct Folio *folio, unsigned char* mem, size_t i
 
 	fp = fopen((char*)folio->files[i].f_name.name, "r");
 
-	for (j = 0; (c = getc(fp)) != EOF; *mem++ = (unsigned char)c)
-		if (c == '\n' && (j++ > 0 && (*(mem-1) != '\\')))
+	for (j = 0; (c = getc(fp)) != EOF; *mem++ = (unsigned char)c, j++)
+		if (c == '\n' && (j > 0 && (*(mem-1) != '\\')))
 			folio->files[i].f_lines++, folio->t_lines++, c = '\0';
 
 	/* If there is no nul terminator, count line */
@@ -154,13 +147,11 @@ static unsigned char *readfile(struct Folio *folio, unsigned char* mem, size_t i
 static unsigned char* readstring(struct Folio *folio, unsigned char* mem, const size_t i)
 {
 	size_t j, k;	/* k checks that it is not the first char of a line */
-	unsigned char c;
+	int c;
 
-	for (j = 0, k = 0; (c = *(folio->files[i].str+j)) != '\0'; j++) {
+	for (j = 0, k = 0; (c = *(folio->files[i].str+j)) != '\0'; *mem++ = (unsigned char)c, j++, k++)
 		if (c == '\n' && (k > 0 && (*(mem-1) != '\\')))
 			folio->files[i].f_lines++, folio->t_lines++, c = '\0';
-		*mem++ = (char)c, k++;
-	}
 
 	/* If there is no nul terminator, count line */
 	if(k > 0 && *(--mem-1) != '\0')
@@ -225,7 +216,7 @@ void loadfolio(struct Folio *folio)
 
 	mem = folio->memory;
 
-	/* For each input, copy onto allocated memory. */
+	/* Copy each string into allocated memory. */
 	for (i = 0; i < folio->t_files; i++)
 		if (folio->files[i].flag)
 			mem = readfile(folio, mem, i);
@@ -291,19 +282,14 @@ void printfolio(struct Folio folio)
 {
 	size_t i, j;
 
-	if (state.reverse) {
+	if (state.reverse)
 		for (i = folio.t_files; i > 0; i--)
-			for (j = 0; j < folio.files[i].f_lines; j++)
-				if (folio.files[i].lines[j].isTrue)
-					printf("%s:%3lu: %s\n", folio.files[i].f_name.name, j+1,
-							folio.files[i].lines[j].line);
-	} else {
+			for (j = 0; j < folio.files[i-1].f_lines; j++)
+				printline(&folio.files[i-1].lines[j]);
+	else
 		for (i = 0; i < folio.t_files; i++)
 			for (j = 0; j < folio.files[i].f_lines; j++)
-				if (folio.files[i].lines[j].isTrue)
-					printf("%s:%3lu: %s\n", folio.files[i].f_name.name, j+1,
-							folio.files[i].lines[j].line);
-	}
+				printline(&folio.files[i-1].lines[j]);
 }
 
 /*

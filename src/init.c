@@ -26,8 +26,8 @@ struct Folio folio = {
 	0
 };
 
-/*
- * Values that are reset between argv strings.
+/**
+ * resetglobals:	Reset all global values.
  */
 void resetglobals(void)
 {
@@ -41,16 +41,32 @@ void resetglobals(void)
 
 size_t pt = 0;
 
-struct Line initline(struct Line ln, size_t id)
+/**
+ * initfile:	Set default values for File struct.
+ */
+struct File initfile(struct File file)
 {
-	ln.line = NULL;
-	ln.name = NULL;
-	ln.next = NULL;
-	ln.len = 0;
-	ln.num = 0;
-	ln.id = id;
-	ln.isTrue = 0;
+	file.lines = NULL;
+	file.f_name.name = NULL;
+	file.str = NULL;
+	file.f_lines = 0;
+	file.f_len = 0;
+	file.flag = 0;
+	return file;
+}
 
-	return ln;
+/**
+ * initline:	set default values for Line struct.
+ */
+struct Line initline(struct Line line, size_t id)
+{
+	line.line = NULL;
+	line.name = NULL;
+	line.next = NULL;
+	line.len = 0;
+	line.num = 0;
+	line.id = id;
+	line.isTrue = 0;
+	return line;
 }
 

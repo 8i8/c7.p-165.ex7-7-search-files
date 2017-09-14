@@ -108,4 +108,5 @@ size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, size_
 
 /* init */
 void resetglobals(void);
-struct Line initline(struct Line ln, size_t id);
+struct File initfile(struct File file);
+struct Line initline(struct Line line, size_t id);

@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
 	//		pt = addspacer(lineptr, MAXLINES, pt, i-1);
 	//}
 
-	//printfolio(folio);
-	printhash(lineptr, pt);
+	printfolio(folio);
+	//printhash(lineptr, pt);
 
 	freeall(&folio);
 
