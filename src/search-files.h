@@ -84,7 +84,6 @@ extern size_t pt;
 
 /* Main */
 void settings(int argc, char*argv[]);
-void resetglobals(void);
 
 /* i/o */
 void getflags(int argc, char *argv[]);
@@ -107,3 +106,6 @@ void _qsort(void *base, size_t nel, size_t width, comp fn);
 size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, size_t ntab);
 size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, size_t ntab);
 
+/* init */
+void resetglobals(void);
+struct Line initline(struct Line ln, size_t id);

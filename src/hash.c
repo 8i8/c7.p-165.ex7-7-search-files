@@ -55,8 +55,8 @@ static void makenode(struct Folio *folio, const size_t i, const size_t j)
 	if ((ln = lookup(folio->files[i].lines[j].line)) != NULL)
 	{
 		ln->isTrue = folio->files[i].lines[j].isTrue = true;
-		while (ln->next != NULL)
-			ln = ln->next;
+		if (ln->next != NULL)
+			folio->files[i].lines[j].next = ln->next;
 		ln->next = &folio->files[i].lines[j];
 		lineptr[pt++] = ln;
 	} else {

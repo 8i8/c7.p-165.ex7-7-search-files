@@ -41,3 +41,16 @@ void resetglobals(void)
 
 size_t pt = 0;
 
+struct Line initline(struct Line ln, size_t id)
+{
+	ln.line = NULL;
+	ln.name = NULL;
+	ln.next = NULL;
+	ln.len = 0;
+	ln.num = 0;
+	ln.id = id;
+	ln.isTrue = 0;
+
+	return ln;
+}
+
