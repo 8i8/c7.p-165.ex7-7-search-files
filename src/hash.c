@@ -9,7 +9,6 @@
 #define P3		281539415969051	/* prime smaller than 2^64/65521 */
 
 static struct Line *hashtab[P2];
-struct Line *lineptr[100];
 
 /*
  * hash:	form hash value for string s

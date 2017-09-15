@@ -22,7 +22,7 @@
 typedef short bool;
 enum boolean { false, true };
 enum function { simple, alpha, fold, nosort };
-enum filetype { string, file };
+enum filetype { type_string, type_file };
 
 /* Function pointers */
 typedef int (*comp)(const void *, const void *);
@@ -46,6 +46,7 @@ struct State {
 
 struct F_name {
 	unsigned char *name;
+	unsigned char *str;
 };
 
 /* Global data struct, to store each file */
@@ -99,7 +100,7 @@ void freeall(struct Folio *folio);
 void hashtable(struct Folio *folio);
 
 /* Sort */
-void sortsection(void *lines, int nel, int width, int func);
+void sortsection(void *lines, int nel, size_t width, int func);
 void _qsort(void *base, size_t nel, size_t width, comp fn);
 size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, size_t ntab);
 size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, size_t ntab);

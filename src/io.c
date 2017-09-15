@@ -78,9 +78,16 @@ static size_t filesize(FILE *fp)
 	return len;
 }
 
-struct File definefile(struct File file, unsigned char* name, short int type, size_t len)
+/**
+ * definefile:	Record input details in file struct, either file or argv
+ * string.
+ */
+struct File definefile(struct File file, unsigned char* name, int type, size_t len)
 {
-	file.f_name.name = name;
+	if (type == type_file)
+		file.f_name.name = name;
+	else
+		file.f_name.name = (unsigned char*)"argv", file.f_name.str = name;
 	file.flag = type;
 	folio.t_len += file.f_len = len;
 	return file;
@@ -114,22 +121,22 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 				folio->files[j] = definefile(
 						folio->files[j],
 						(unsigned char*)argv[i],
-						file,
+						type_file,
 						filesize(fp));
 				fclose(fp);
 			} else
 				folio->files[j] = definefile(
 						folio->files[j],
 						(unsigned char*)argv[i],
-						file,
-						strlen(argv[i]));
+						type_string,
+						1+strlen(argv[i]));
 			j++;
 		}
 }
 
 /*
  * readfile:	Transfer input form files to memory, count end of line
- * characters to obtain the line count whilst doing so, convert new line to nul
+ * characters to obtain the line count, convert newline char to nul
  * terminators.
  */
 static unsigned char *readfile(struct File *file, unsigned char* mem)
@@ -162,10 +169,10 @@ static unsigned char *readfile(struct File *file, unsigned char* mem)
  */
 static unsigned char* readstring(struct File *file, unsigned char* mem)
 {
-	size_t i, j;	/* k checks that it is not the first char of a line */
+	size_t i;	/* k checks that it is not the first char of a line */
 	int c;
 
-	for (i = 0, j = 0; (c = *(file->f_name.name+i)) != '\0'; *mem++ = (unsigned char)c, i++, j++)
+	for (i = 0; (c = file->f_name.str[i]) != '\0'; *mem++ = (unsigned char)c, i++)
 		if (c == '\n') {
 			if (i == 0)
 				file->f_lines++, folio.t_lines++, c = '\0';
@@ -173,9 +180,8 @@ static unsigned char* readstring(struct File *file, unsigned char* mem)
 				file->f_lines++, folio.t_lines++, c = '\0';
 		}
 
-	/* If there is no nul terminator, count line */
-	if(j > 0 && *(--mem-1) != '\0')
-		file->f_lines++, folio.t_lines++, mem++;
+	*mem++ = '\0';
+	file->f_lines++, folio.t_lines++;
 
 	return mem;
 }
@@ -292,7 +298,6 @@ void printhash(struct Line *lineptr[], size_t len)
 	else
 		for (i = 0; i < len; i++)
 			printline(lineptr[i]);
-	
 }
 
 /*

@@ -3,9 +3,12 @@
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "search-files.h"
 
+struct Line *lineptr[100];
+
 /* main:	state for program functions */
 struct State state = {
 	alpha,
+	//simple,
 	false,
 	false,
 	false,

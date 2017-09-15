@@ -28,7 +28,7 @@ comp strfold = (int (*)(const void*, const void*)) sortfolded;
 /*
  * sortsection:	Switch, selects the sort function for qsort, see program states.
  */
-void sortsection(void *lines, int nel, int width, int func)
+void sortsection(void *lines, int nel, size_t width, int func)
 {
 	switch (func) {
 		case simple:
@@ -52,7 +52,7 @@ void sortsection(void *lines, int nel, int width, int func)
  */
 void _qsort(void *base, size_t nel, size_t width, comp fn)
 {
-	unsigned char *b = (void*)base;
+	unsigned char *b = (unsigned char*)base;
 	size_t i, left, last;
 
 	left = 0;
@@ -317,7 +317,7 @@ static unsigned char* jumptotab(unsigned char *c, size_t ntab)
 /*
  * sortascii:	Conversion used for sortfolded.
  */
-static int sortascii(unsigned char *c, bool fold)
+static int sortascii(char *c, bool fold)
 {
 	if (isupper(*c))
 		if (fold)
@@ -340,9 +340,8 @@ static int sortalpha(const void *l1, const void *l2)
 	unsigned char c1, c2;
 	s1 = (struct Line*)l1, s2 = (struct Line*)l2;
 
-	c1 = *s1->line, c2 = *s2->line;
-	c1 = sortascii(&c1, false);
-	c2 = sortascii(&c2, false);
+	c1 = sortascii((char*)&s1->line[0], false);
+	c2 = sortascii((char*)&s2->line[0], false);
 	return c1 - c2;
 }
 
@@ -355,9 +354,8 @@ static int sortfolded(const void *l1, const void *l2)
 	unsigned char c1, c2;
 	s1 = (struct Line*)l1, s2 = (struct Line*)l2;
 
-	c1 = *s1->line, c2 = *s2->line;
-	c1 = sortascii(&c1, true);
-	c2 = sortascii(&c2, true);
+	c1 = sortascii((char*)&s1->line[0], true);
+	c2 = sortascii((char*)&s2->line[0], true);
 	return c1 - c2;
 }
 
