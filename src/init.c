@@ -18,17 +18,6 @@ struct State state = {
 	false
 };
 
-/* main:	portfolio of file input */
-struct Folio folio = {
-	NULL,
-	NULL,
-	NULL,
-	0,
-	0,
-	0,
-	0
-};
-
 /**
  * resetglobals:	Reset all global values.
  */
@@ -45,30 +34,47 @@ void resetglobals(void)
 size_t pt = 0;
 
 /**
- * initfile:	Set default values for File struct.
+ * initFolio:	portfolio of file input.
  */
-struct File initfile(struct File file)
+struct Folio *initFolio(struct Folio *folio)
 {
-	file.lines = NULL;
-	file.f_name.name = NULL;
-	file.f_lines = 0;
-	file.f_len = 0;
-	file.flag = 0;
-	return file;
+	folio->files = NULL;
+	folio->memory = NULL;
+	folio->linesArray = NULL;
+	folio->t_files = 0;
+	folio->t_lines = 0;
+	folio->t_len = 0;
+	folio->ntab = 0;
+	return folio;
 }
 
 /**
- * initline:	set default values for Line struct.
+ * init_file:	Set default values for File struct.
  */
-struct Line initline(struct Line line, size_t id)
+struct File init_file(struct File *file, struct Folio *root)
 {
-	line.line = NULL;
-	line.name = NULL;
-	line.next = NULL;
-	line.len = 0;
-	line.num = 0;
-	line.id = id;
-	line.isTrue = 0;
-	return line;
+	file->lines = NULL;
+	file->f_name.name = NULL;
+	file->root = root;
+	file->f_lines = 0;
+	file->f_len = 0;
+	file->flag = 0;
+	return *file;
+}
+
+/**
+ * init_line:	set default values for Line struct.
+ */
+struct Line init_line(struct Line *line, size_t id)
+{
+	line->line = NULL;
+	line->name = NULL;
+	line->file = NULL;
+	line->next = NULL;
+	line->len = 0;
+	line->num = 0;
+	line->id = id;
+	line->isTrue = 0;
+	return *line;
 }
 

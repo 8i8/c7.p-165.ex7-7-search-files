@@ -89,7 +89,7 @@ struct File definefile(struct File file, unsigned char* name, int type, size_t l
 	else
 		file.f_name.name = (unsigned char*)"argv", file.f_name.str = name;
 	file.flag = type;
-	folio.t_len += file.f_len = len;
+	file.root->t_len += file.f_len = len;
 	return file;
 }
 
@@ -97,7 +97,7 @@ struct File definefile(struct File file, unsigned char* name, int type, size_t l
  * getinput:	Input files and strings from supplied arguments, counting the
  * total length for use in total memory assignment.
  */
-void getinput(struct Folio *folio, int argc, char *argv[])
+void getinput(struct Folio *fx1, int argc, char *argv[])
 {
 	FILE *fp;
 	size_t i, j;
@@ -107,26 +107,26 @@ void getinput(struct Folio *folio, int argc, char *argv[])
 		if (*argv[i] != '-')
 			j++;
 
-	folio->files = malloc(j*sizeof(struct File));
-	folio->t_files = j;
+	fx1->t_files = j;
+	fx1->files = malloc(j*sizeof(struct File));
 
 	for (i = 0; i < j; i++)
-		folio->files[i] = initfile(folio->files[i]);
+		fx1->files[i] = init_file(&fx1->files[i], fx1);
 
 	/* Input argv if not a flag */
 	i = j = 0;
 	while (++i < (unsigned int)argc)
 		if (*argv[i] != '-') {
 			if ((fp = fopen(argv[i], "r")) != NULL) {
-				folio->files[j] = definefile(
-						folio->files[j],
+				fx1->files[j] = definefile(
+						fx1->files[j],
 						(unsigned char*)argv[i],
 						type_file,
 						filesize(fp));
 				fclose(fp);
 			} else
-				folio->files[j] = definefile(
-						folio->files[j],
+				fx1->files[j] = definefile(
+						fx1->files[j],
 						(unsigned char*)argv[i],
 						type_string,
 						1+strlen(argv[i]));
@@ -150,14 +150,14 @@ static unsigned char *readfile(struct File *file, unsigned char* mem)
 	for (i = 0; (c = getc(fp)) != EOF; *mem++ = (unsigned char)c, i++)
 		if (c == '\n') {
 			if (i == 0)
-				file->f_lines++, folio.t_lines++, c = '\0';
+				file->f_lines++, file->root->t_lines++, c = '\0';
 			else if (*(mem-1) != '\\')
-				file->f_lines++, folio.t_lines++, c = '\0';
+				file->f_lines++, file->root->t_lines++, c = '\0';
 		}
 
 	/* If there is no nul terminator, count line */
 	if(i > 0 && *(mem-1) != '\0')
-		file->f_lines++, folio.t_lines++, *mem++ = '\0';
+		file->f_lines++, file->root->t_lines++, *mem++ = '\0';
 
 	fclose(fp);
 
@@ -167,7 +167,7 @@ static unsigned char *readfile(struct File *file, unsigned char* mem)
 /*
  * readstring:	Copy argument string into folio memory block.
  */
-static unsigned char* readstring(struct File *file, unsigned char* mem)
+static unsigned char *readstring(struct File *file, unsigned char* mem)
 {
 	size_t i;	/* k checks that it is not the first char of a line */
 	int c;
@@ -175,13 +175,13 @@ static unsigned char* readstring(struct File *file, unsigned char* mem)
 	for (i = 0; (c = file->f_name.str[i]) != '\0'; *mem++ = (unsigned char)c, i++)
 		if (c == '\n') {
 			if (i == 0)
-				file->f_lines++, folio.t_lines++, c = '\0';
+				file->f_lines++, file->root->t_lines++, c = '\0';
 			else if (*(mem-1) != '\\')
-				file->f_lines++, folio.t_lines++, c = '\0';
+				file->f_lines++, file->root->t_lines++, c = '\0';
 		}
 
 	*mem++ = '\0';
-	file->f_lines++, folio.t_lines++;
+	file->f_lines++, file->root->t_lines++;
 
 	return mem;
 }
@@ -189,41 +189,42 @@ static unsigned char* readstring(struct File *file, unsigned char* mem)
 /*
  * defineline:	Exchange instances of \n for \0, record line details.
  */
-static void defineline(struct Folio *folio, const size_t i, size_t *j, size_t *k)
+static void defineline(struct Folio *fx1, const size_t i, size_t *j, size_t *k)
 {
-	folio->files[i].lines[*j].name = &(folio->files[i].f_name);
-	folio->files[i].lines[*j].next = NULL;
-	folio->files[i].lines[*j].len = *k;
-	folio->files[i].lines[*j].num = (*j)+1;
-	folio->files[i].lines[*j].isTrue = 0;
+	fx1->files[i].lines[*j].name = &(fx1->files[i].f_name);
+	fx1->files[i].lines[*j].next = NULL;
+	fx1->files[i].lines[*j].file = &fx1->files[i];
+	fx1->files[i].lines[*j].len = *k;
+	fx1->files[i].lines[*j].num = (*j)+1;
+	fx1->files[i].lines[*j].isTrue = 0;
 }
 
 /*
  * alloclines:	 Memory for Line pointer array and structs.
  */
-static void alloclines(struct Folio *folio)
+static void alloclines(struct Folio *fx1)
 {
 	size_t i;
 
-	if ((folio->linesArray = malloc(folio->t_lines*(sizeof(struct Line)))) == NULL)
+	if ((fx1->linesArray = malloc(fx1->t_lines*(sizeof(struct Line)))) == NULL)
 		printf("error:	malloc failed to assign memory in alloclines(), Line\n");
 
-	for (i = 0; i < folio->t_lines; i++)
-		folio->linesArray[i] = initline(folio->linesArray[i], i);
+	for (i = 0; i < fx1->t_lines; i++)
+		fx1->linesArray[i] = init_line(&fx1->linesArray[i], i);
 }
 
 /*
  * assignlines:	 Define addresses of Line pointer array of structs.
  */
-static void assignlines(struct Folio *folio)
+static void assignlines(struct Folio *fx1)
 {
 	size_t i;
 	struct Line *l_ptr;
-	l_ptr = folio->linesArray;
+	l_ptr = fx1->linesArray;
 
-	for (i = 0; i < folio->t_files; i++) {
-		folio->files[i].lines = l_ptr;
-		l_ptr += folio->files[i].f_lines;
+	for (i = 0; i < fx1->t_files; i++) {
+		fx1->files[i].lines = l_ptr;
+		l_ptr += fx1->files[i].f_lines;
 	}
 }
 
@@ -231,34 +232,34 @@ static void assignlines(struct Folio *folio)
  * loadfolio:	For given folio struct create required memory and store all
  * eliments addressed by argv.
  */
-void loadfolio(struct Folio *folio)
+void loadfolio(struct Folio *fx1)
 {
 	size_t i, j, k;
 	unsigned char *mem;
 
-	if ((folio->memory = malloc(folio->t_len*sizeof(char)) ) == NULL)
-		printf("error:	malloc failed to assign memory in loadfolio(), memory\n");
+	if ((fx1->memory = malloc(fx1->t_len*sizeof(char)) ) == NULL)
+		printf("error:	malloc failed to assign memory in loadfx1(), memory\n");
 
-	mem = folio->memory;
+	mem = fx1->memory;
 
 	/* Copy each string into allocated memory. */
-	for (i = 0; i < folio->t_files; i++)
-		if (folio->files[i].flag)
-			mem = readfile(&folio->files[i], mem);
+	for (i = 0; i < fx1->t_files; i++)
+		if (fx1->files[i].flag)
+			mem = readfile(&fx1->files[i], mem);
 		else
-			mem = readstring(&folio->files[i], mem);
+			mem = readstring(&fx1->files[i], mem);
 
 	/* Allocate memory to structs and set them to point to string addresses. */
-	mem = folio->memory;
-	alloclines(folio);
-	assignlines(folio);
+	mem = fx1->memory;
+	alloclines(fx1);
+	assignlines(fx1);
 
-	for (i = 0; i < folio->t_files; i++)
+	for (i = 0; i < fx1->t_files; i++)
 		/* k+1 (+1) to skip over the nul terminator. */
-		for (j = 0, k = 0; j < folio->files[i].f_lines; mem += k+1, j++) {
-			folio->files[i].lines[j].line = mem;
+		for (j = 0, k = 0; j < fx1->files[i].f_lines; mem += k+1, j++) {
+			fx1->files[i].lines[j].line = mem;
 			k = strlen((char*)mem);
-			defineline(folio, i, &j, &k);
+			defineline(fx1, i, &j, &k);
 		}
 }
 
@@ -303,27 +304,27 @@ void printhash(struct Line *lineptr[], size_t len)
 /*
  * printfolio:	Print entire folio array.
  */
-void printfolio(struct Folio folio)
+void printfolio(struct Folio *fx1)
 {
 	size_t i, j;
 
 	if (state.reverse)
-		for (i = folio.t_files; i > 0; i--)
-			for (j = folio.files[i-1].f_lines; j > 0; j--)
-				printline(&folio.files[i-1].lines[j-1]);
+		for (i = fx1->t_files; i > 0; i--)
+			for (j = fx1->files[i-1].f_lines; j > 0; j--)
+				printline(&fx1->files[i-1].lines[j-1]);
 	else
-		for (i = 0; i < folio.t_files; i++)
-			for (j = 0; j < folio.files[i].f_lines; j++)
-				printline(&folio.files[i].lines[j]);
+		for (i = 0; i < fx1->t_files; i++)
+			for (j = 0; j < fx1->files[i].f_lines; j++)
+				printline(&fx1->files[i].lines[j]);
 }
 
 /*
  * freeall:	Free all allocated memory.
  */
-void freeall(struct Folio *folio)
+void freeall(struct Folio *fx1)
 {
-	free(folio->memory);
-	free(folio->linesArray);
-	free(folio->files);
+	free(fx1->memory);
+	free(fx1->linesArray);
+	free(fx1->files);
 }
 

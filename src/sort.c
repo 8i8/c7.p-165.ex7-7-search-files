@@ -8,7 +8,7 @@
 /* _qsort */
 //static int nsort(unsigned char *left, unsigned char *right, comp fn);
 //static int firstcmp(unsigned char *s1, unsigned char *s2, size_t ntab);
-static int tabcmp(unsigned char *s1, unsigned char *s2, size_t ntab);
+//static int tabcmp(unsigned char *s1, unsigned char *s2, size_t ntab);
 
 /* Sort functions */
 static void swap(void *string, size_t i, size_t j, size_t width);
@@ -79,46 +79,47 @@ void _qsort(void *base, size_t nel, size_t width, comp fn)
  * compfileds:	group together identical lines and make a list from their
  * corresponding numbers.
  */
-static size_t compfields(unsigned char *lineptr[], size_t left, size_t right, size_t nlines, int ntab)
-{
-	unsigned char comp[MAXLEN];
-	unsigned char line[MAXLEN];
-	unsigned char *c;
-	size_t mark;
-        mark = left;
-
-	/*
-	 * Copy the first line as a base for concatenation, and again as a
-	 * temporary comparator, delete the original.
-	 */
-	strcpy((char*)comp, (char*)lineptr[left]);
-	strcpy((char*)line, (char*)lineptr[left]);
-	//nlines = deleteline(lineptr, left++, nlines);
-
-	while (left <= right)
-	{
-		if (!tabcmp(comp, lineptr[mark], folio.ntab-1)) { 
-			c = lineptr[mark];
-
-			if ((c = jumptotab(c, ntab)) == NULL) {
-				mark++, left++;
-				continue;
-			}
-
-			c = jumptochar(c);
-			strcat((char*)line, ", ");
-			strcat((char*)line, (char*)c);
-
-			//nlines = deleteline(lineptr, mark, nlines);
-		} else
-			mark++;
-		left++;
-	}
-
-	//nlines = insertline(lineptr, line, MAXLINES, orig, nlines);
-
-	return nlines;
-}
+//static size_t compfields(struct Line *lineptr[], size_t left, size_t right, size_t nlines, int ntab)
+//{
+//	unsigned char comp[MAXLEN];
+//	unsigned char line[MAXLEN];
+//	unsigned char *c;
+//	size_t mark;
+//        mark = left;
+//	int i; //temp to quieten the compiler
+//
+//	/*
+//	 * Copy the first line as a base for concatenation, and again as a
+//	 * temporary comparator, delete the original.
+//	 */
+//	strcpy((char*)comp, (char*)lineptr[left]);
+//	strcpy((char*)line, (char*)lineptr[left]);
+//	//nlines = deleteline(lineptr, left++, nlines);
+//
+//	while (left <= right)
+//	{
+//		if (!tabcmp(comp, lineptr[mark], lineptr[mark]->file->root->ntab-1)) { 
+//			c = lineptr[mark];
+//
+//			if ((c = jumptotab(c, ntab)) == NULL) {
+//				mark++, left++;
+//				continue;
+//			}
+//
+//			c = jumptochar(c);
+//			strcat((char*)line, ", ");
+//			strcat((char*)line, (char*)c);
+//
+//			//nlines = deleteline(lineptr, mark, nlines);
+//		} else
+//			mark++;
+//		left++;
+//	}
+//
+//	//nlines = insertline(lineptr, line, MAXLINES, orig, nlines);
+//
+//	return nlines;
+//}
 
 /*
  * firstcmp:	Compare the first char of each line, return 0 if there is an
@@ -169,47 +170,47 @@ static int firstcmp(unsigned char *s1, unsigned char *s2, size_t ntab)
 /*
  * Test if the contents of the given tab fields are identical.
  */
-static int tabcmp(unsigned char *s1, unsigned char *s2, size_t ntab)
-{
-	bool p1, p2;
-	unsigned char *s1_pt, *s2_pt;
-	int res;
-	p1 = p2 = false;
-	s1_pt = s1, s2_pt = s2;
-	res = 0;
-
-	/*
-	 * Jump to specified tab if it exists in both strings, else return 0;
-	 */
-	if (ntab) {
-		if ((s1 = jumptotab(s1, ntab)) == NULL)
-			s1 = s1_pt, p1 = true;
-		if ((s2 = jumptotab(s2, ntab)) == NULL)
-			s2 = s2_pt, p2 = true;
-		/*
-		 * If either pointers return null the tab does not exist,
-		 * return 1, values are not the same.
-		 */
-		if (p1 == true || p2 == true)
-			return 1;
-	}
-
-	/*
-	 * Jump to the first relevant character.
-	 */
-	s1 = jumptochar(s1);
-	s2 = jumptochar(s2);
-
-	/*
-	 * If the strings are identical up until the tab, return 0.
-	 */
-	res = strtcmp(s1, s2);
-
-	if (!res)
-		return 0;
-
-	return 1;
-}
+//static int tabcmp(unsigned char *s1, unsigned char *s2, size_t ntab)
+//{
+//	bool p1, p2;
+//	unsigned char *s1_pt, *s2_pt;
+//	int res;
+//	p1 = p2 = false;
+//	s1_pt = s1, s2_pt = s2;
+//	res = 0;
+//
+//	/*
+//	 * Jump to specified tab if it exists in both strings, else return 0;
+//	 */
+//	if (ntab) {
+//		if ((s1 = jumptotab(s1, ntab)) == NULL)
+//			s1 = s1_pt, p1 = true;
+//		if ((s2 = jumptotab(s2, ntab)) == NULL)
+//			s2 = s2_pt, p2 = true;
+//		/*
+//		 * If either pointers return null the tab does not exist,
+//		 * return 1, values are not the same.
+//		 */
+//		if (p1 == true || p2 == true)
+//			return 1;
+//	}
+//
+//	/*
+//	 * Jump to the first relevant character.
+//	 */
+//	s1 = jumptochar(s1);
+//	s2 = jumptochar(s2);
+//
+//	/*
+//	 * If the strings are identical up until the tab, return 0.
+//	 */
+//	res = strtcmp(s1, s2);
+//
+//	if (!res)
+//		return 0;
+//
+//	return 1;
+//}
 
 /*
  * sortdivide:	Search over the array looking for lines that are grouped
@@ -217,38 +218,38 @@ static int tabcmp(unsigned char *s1, unsigned char *s2, size_t ntab)
  * index of each group and then sort by the next argv input using the given tab
  * field.
  */
-size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, size_t ntab)
-{
-	size_t i, j;
-	i = j = 0;
-
-	while (++i < nlines)
-		/*
-		 * If the first char of both lines differ, start the count.
-		 */
-		if (!firstcmp(lineptr[i-1], lineptr[i], ntab) || i == 1) {
-			/*
-			 * Whilst the first char of the prior tab stop are the
-			 * same; Keep on counting.
-			 */
-			j = i-1;
-			while (i < nlines && !strtcmp(lineptr[i-1], lineptr[i]))
-				i++;
-			/*
-			 * Perform sort between this current change of letter
-			 * and the last stored index j; then store i as j.
-			 * If directory mode is set, call compfields()
-			 * function.
-			 */
-			if (state.indx) {
-				sortsection((void**)lineptr, j, i-1, func);
-				nlines = compfields(lineptr, j, i-1, nlines, ntab);
-			} else
-				sortsection((void**)lineptr, j, i-1, func);
-		}
-
-	return nlines;
-}
+//size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, size_t ntab)
+//{
+//	size_t i, j;
+//	i = j = 0;
+//
+//	while (++i < nlines)
+//		/*
+//		 * If the first char of both lines differ, start the count.
+//		 */
+//		if (!firstcmp(lineptr[i-1], lineptr[i], ntab) || i == 1) {
+//			/*
+//			 * Whilst the first char of the prior tab stop are the
+//			 * same; Keep on counting.
+//			 */
+//			j = i-1;
+//			while (i < nlines && !strtcmp(lineptr[i-1], lineptr[i]))
+//				i++;
+//			/*
+//			 * Perform sort between this current change of letter
+//			 * and the last stored index j; then store i as j.
+//			 * If directory mode is set, call compfields()
+//			 * function.
+//			 */
+//			if (state.indx) {
+//				sortsection((void**)lineptr, j, i-1, func);
+//				nlines = compfields(lineptr, j, i-1, nlines, ntab);
+//			} else
+//				sortsection((void**)lineptr, j, i-1, func);
+//		}
+//
+//	return nlines;
+//}
 
 /*
  * addspacer:	Add empty 'spacer' line.

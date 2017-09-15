@@ -53,6 +53,7 @@ struct F_name {
 struct Line {
 	unsigned char *line;
 	struct F_name *name;
+	struct File *file;
 	struct Line *next;
 	size_t len;
 	size_t num;
@@ -63,6 +64,7 @@ struct Line {
 struct File {
 	struct Line *lines;
 	struct F_name f_name;
+	struct Folio *root;
 	unsigned int flag : 1;
 	size_t f_lines;			/* Character count for entire file */
 	size_t f_len;
@@ -84,7 +86,7 @@ extern struct Line *lineptr[];
 extern size_t pt;
 
 /* Main */
-void settings(int argc, char*argv[]);
+struct Folio *settings(struct Folio *fx1, int argc, char*argv[]);
 
 /* i/o */
 void getflags(int argc, char *argv[]);
@@ -93,7 +95,7 @@ void loadfolio(struct Folio *folio);
 void printhash(struct Line *lineptr[], size_t len);
 void settabs(char n[]);
 size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines, size_t index, size_t nlines);
-void printfolio(struct Folio folio);
+void printfolio(struct Folio *folio);
 void freeall(struct Folio *folio);
 
 /* Hash table */
@@ -107,5 +109,6 @@ size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, size_
 
 /* init */
 void resetglobals(void);
-struct File initfile(struct File file);
-struct Line initline(struct Line line, size_t id);
+struct Folio *initFolio(struct Folio *folio);
+struct File init_file(struct File *file, struct Folio *root);
+struct Line init_line(struct Line *line, size_t id);

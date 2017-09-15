@@ -8,18 +8,22 @@
 
 int main(int argc, char *argv[])
 {
+	struct Folio folio;
+	struct Folio *f;
+	f = initFolio(&folio);
+
 	if (argc > 1)
-		settings(argc, argv);
+		f = settings(f, argc, argv);
 
 	if (folio.t_files)
-		loadfolio(&folio);
+		loadfolio(f);
 	else
 		printf("usage:	%s <file1> <file2> ...\n", *argv);
 
-	hashtable(&folio);
+	hashtable(f);
 
 	/* Sort input */
-	sortsection((void*)lineptr, pt, sizeof(struct Line*), state.func);
+	sortsection((void*)*lineptr, pt, sizeof(struct Line*), state.func);
 	//sortsection((void*)folio.linesArray, folio.t_lines, sizeof(struct Line), state.func);
 	
 	/* If required, add line spacers. */
@@ -45,11 +49,11 @@ int main(int argc, char *argv[])
 	//		pt = addspacer(lineptr, MAXLINES, pt, i-1);
 	//}
 
-	printfolio(folio);
+	printfolio(f);
 	printf("\n");
 	printhash(lineptr, pt);
 
-	freeall(&folio);
+	freeall(f);
 
 	return 0;
 }
@@ -59,7 +63,7 @@ int main(int argc, char *argv[])
  * is set accordingly else it is either a string or a file, in which case it is
  * sent to getinput().
  */
-void settings(int argc, char*argv[])
+struct Folio *settings(struct Folio *fx1, int argc, char*argv[])
 {
 	size_t i;
 
@@ -69,6 +73,8 @@ void settings(int argc, char*argv[])
 		if (*argv[i] == '-')
 			getflags(i, argv);
 
-	getinput(&folio, argc, argv);
+	getinput(fx1, argc, argv);
+
+	return fx1;
 }
 
