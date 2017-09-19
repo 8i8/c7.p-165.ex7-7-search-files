@@ -16,12 +16,14 @@ static unsigned char* jumptochar(unsigned char *c);
 static unsigned char* jumptotab(unsigned char *c, size_t ntab);
 static int sortfolded(const void *s1, const void *s2);
 //static int numcmp(const void *l1, const void *l2);
+static int strscmp(const void *s, const void *t);
 static int strtcmp(const void *s, const void *t);
 static int sortalpha(const void *s1, const void *s2);
 static int strtcmp(const void *s, const void *t);
 
 /* Function pointers */
-comp strsimp = (int (*)(const void*, const void*)) strtcmp;
+comp strsimp = (int (*)(const void*, const void*)) strscmp;
+//comp strsimp = (int (*)(const void*, const void*)) strtcmp;
 comp stnsort = (int (*)(const void*, const void*)) sortalpha;
 comp strfold = (int (*)(const void*, const void*)) sortfolded;
 
@@ -50,8 +52,9 @@ void sortsection(void *lines, int nel, size_t width, int func)
 /*
  * qsort:	generic qsort function.
  */
-void _qsort(void *base, size_t nel, size_t width, comp fn)
+void _qsort(void *base, size_t nel, size_t width, int (*fn)(const void*, const void*))
 {
+	void swap(void *string, size_t i, size_t j, size_t width);
 	unsigned char *b = (unsigned char*)base;
 	size_t i, left, last;
 
@@ -274,7 +277,7 @@ size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, size_
 /*
  * Swap for 'width' places, 'i' to 'j' on the given string.
  */
-static void swap(void *string, size_t i, size_t j, size_t width)
+void swap(void *string, size_t i, size_t j, size_t width)
 {
 	if (i == j)
 		return; /* return directly if swap is not required */
@@ -285,10 +288,11 @@ static void swap(void *string, size_t i, size_t j, size_t width)
 	i = i*width; 
 	j = j*width;
 
-	for (; width > 0; --width) {
-		t            = *(s+width+i);
-		*(s+width+i) = *(s+width+j);
-		*(s+width+j) = t;
+	size_t k;
+	for (k = 0; k < width; k++) {
+		t        = *(s+k+i);
+		*(s+k+i) = *(s+k+j);
+		*(s+k+j) = t;
 	}
 }
 
@@ -389,6 +393,16 @@ static int strtcmp(const void *s, const void *t)
                 if (*u->line == '\0' || *v->line == '\t')
                         return 0;
         return *u->line - *v->line;
+}
+
+/*
+ * strscmp:	tempory wrapper for strcmp.
+ */
+int strscmp(const void* v1, const void* v2)
+{
+	const struct Line *s1, *s2;
+	s1 = v1, s2 = v2;
+	return strcmp((const void*)s1->line, (const void*)s2->line);
 }
 
 ///*

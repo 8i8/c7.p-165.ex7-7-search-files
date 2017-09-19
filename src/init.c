@@ -3,12 +3,10 @@
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "search-files.h"
 
-struct Line *lineptr[100];
-
 /* main:	state for program functions */
 struct State state = {
-	alpha,
-	//simple,
+	//alpha,
+	simple,
 	false,
 	false,
 	false,
@@ -31,13 +29,12 @@ void resetglobals(void)
 	state.indx =		false;
 }
 
-size_t pt = 0;
-
 /**
  * initFolio:	portfolio of file input.
  */
-struct Folio *initFolio(struct Folio *folio)
+struct Folio *init_folio(struct Folio *folio)
 {
+	folio = malloc(sizeof(struct Folio));
 	folio->files = NULL;
 	folio->memory = NULL;
 	folio->linesArray = NULL;
@@ -46,6 +43,17 @@ struct Folio *initFolio(struct Folio *folio)
 	folio->t_len = 0;
 	folio->ntab = 0;
 	return folio;
+}
+
+/**
+ * init_sort:	initiate hashresults for sorting.
+ */
+struct Sort *init_sort(struct Sort *sort)
+{
+	sort = malloc(sizeof(*sort));
+	sort->results = malloc(100);
+	sort->pt = 0;
+	return sort;
 }
 
 /**

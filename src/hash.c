@@ -45,7 +45,11 @@ static struct Line *lookup(unsigned char *s)
  * makenode:	Check if the lines hash halready has a node, if it does link to
  * it, if not then start a new branch.
  */
-static void makenode(struct Folio *folio, const size_t i, const size_t j)
+static struct Sort *makenode(
+		struct Folio *folio,
+		const size_t i,
+		const size_t j,
+		struct Sort *s)
 {
 	struct Line *ln;
 	unsigned hashval;
@@ -56,26 +60,29 @@ static void makenode(struct Folio *folio, const size_t i, const size_t j)
 		if (ln->next != NULL)
 			folio->files[i].lines[j].next = ln->next;
 		ln->next = &folio->files[i].lines[j];
-		lineptr[pt++] = ln;
+		//lineptr[pt++] = ln;
+		s->results[s->pt++] = ln;
 	} else {
 		hashval = hash(folio->files[i].lines[j].line);
-		/* Move NULL trminator to the `next` struct */
+		/* Move NULL terminator to the `next` struct */
 		folio->files[i].lines[j].next = hashtab[hashval];
 		/* Put new struct into a hash bucket. */
 		hashtab[hashval] = &folio->files[i].lines[j];
 	}
+	return s;
 }
 
 /*
  * install:	link line structs to hash bucket.
  */
-void hashtable(struct Folio *folio)
+struct Sort *hashtable(struct Folio *folio, struct Sort *s)
 {
 	size_t i, j;
 
 	for (i = 0; i < folio->t_files; i++)
 		for (j = 0; j < folio->files[i].f_lines; j++)
 			if (*folio->files[i].lines[j].line != '\0')
-				makenode(folio, i, j);
+				s = makenode(folio, i, j, s);
+	return s;
 }
 

@@ -7,19 +7,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "structs.c"
 
 /* Redefine getline */
 #undef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
 
-#define MAXFILES	1000
 #define MAXLEN		1000			/* Max length of input line */
 #define MAXLINES	5000			/* Lines to be sorted */
-#define ALLOCSIZE	5000			/* Size of available space */
-#define MAXTOKEN	6			/* Maximum number of tokens */
-#define TOKENSIZE	24			/* Size of space for input tokens */
 
 typedef short bool;
+
 enum boolean { false, true };
 enum function { simple, alpha, fold, nosort };
 enum filetype { type_string, type_file };
@@ -32,83 +30,31 @@ extern comp strfold;
 
 typedef short int bool;
 
-/* Global flags */
-struct State {
-	unsigned int func;			/* Define which function to use */
-	unsigned int numeric	: 1;		/* use numeric sort in qsort */
-	unsigned int reverse	: 1;		/* reverse search order */
-	unsigned int remempty	: 1;
-	unsigned int directory	: 1;
-	unsigned int rsort	: 1;
-	unsigned int indx	: 1;
-	unsigned int linenum	: 1;
-};
-
-struct F_name {
-	unsigned char *name;
-	unsigned char *str;
-};
-
-/* Global data struct, to store each file */
-struct Line {
-	unsigned char *line;
-	struct F_name *name;
-	struct File *file;
-	struct Line *next;
-	size_t len;
-	size_t num;
-	size_t id;
-	unsigned int isTrue : 1;
-};
-
-struct File {
-	struct Line *lines;
-	struct F_name f_name;
-	struct Folio *root;
-	unsigned int flag : 1;
-	size_t f_lines;			/* Character count for entire file */
-	size_t f_len;
-};
-
-struct Folio {
-	struct File *files;
-	unsigned char *memory;		/* Pointer to the text block */
-	struct Line *linesArray;	/* Pointer to the Linres block */
-	size_t t_files;
-	size_t t_lines;
-	size_t t_len;
-	size_t ntab;
-};
-
 extern struct State state;
-extern struct Folio folio;
-extern struct Line *lineptr[];
-extern size_t pt;
-
-/* Main */
-struct Folio *settings(struct Folio *fx1, int argc, char*argv[]);
 
 /* i/o */
 void getflags(int argc, char *argv[]);
 void getinput(struct Folio *folio, int argc, char *argv[]);
 void loadfolio(struct Folio *folio);
-void printhash(struct Line *lineptr[], size_t len);
+void printhash(struct Sort *s);
 void settabs(char n[]);
 size_t insertline(unsigned char *lineptr[], unsigned char *line, size_t maxlines, size_t index, size_t nlines);
 void printfolio(struct Folio *folio);
-void freeall(struct Folio *folio);
+void free_folio(struct Folio *fx1);
+void free_sort(struct Sort *s);
 
 /* Hash table */
-void hashtable(struct Folio *folio);
+struct Sort *hashtable(struct Folio *folio, struct Sort *s);
 
 /* Sort */
 void sortsection(void *lines, int nel, size_t width, int func);
-void _qsort(void *base, size_t nel, size_t width, comp fn);
+void _qsort(void *base, size_t nel, size_t width, int (*fn)(const void*, const void*));
 size_t sortdivide(unsigned char *lineptr[], int func, size_t nlines, size_t ntab);
 size_t addspacer(unsigned char *lineptr[], size_t maxlines, size_t nlines, size_t ntab);
 
 /* init */
 void resetglobals(void);
-struct Folio *initFolio(struct Folio *folio);
+struct Folio *init_folio(struct Folio *folio);
+struct Sort *init_sort(struct Sort *sort);
 struct File init_file(struct File *file, struct Folio *root);
 struct Line init_line(struct Line *line, size_t id);

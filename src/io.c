@@ -289,16 +289,16 @@ void printline(struct Line *line)
 /*
  * printhash:	Print structs from hash array.
  */
-void printhash(struct Line *lineptr[], size_t len)
+void printhash(struct Sort *s)
 {
 	size_t i;
 
 	if (state.reverse)
-		for (i = len; i > 0; i--)
-			printline(lineptr[i-1]);
+		for (i = s->pt; i > 0; i--)
+			printline(s->results[i-1]);
 	else
-		for (i = 0; i < len; i++)
-			printline(lineptr[i]);
+		for (i = 0; i < s->pt; i++)
+			printline(s->results[i]);
 }
 
 /*
@@ -319,12 +319,21 @@ void printfolio(struct Folio *fx1)
 }
 
 /*
- * freeall:	Free all allocated memory.
+ * free_folio:	Free allocated memory for folio structure and content.
  */
-void freeall(struct Folio *fx1)
+void free_folio(struct Folio *fx1)
 {
 	free(fx1->memory);
 	free(fx1->linesArray);
 	free(fx1->files);
+	free(fx1);
 }
 
+/*
+ * free_sort:	Free allocated memory for Sort struct and array.
+ */
+void free_sort(struct Sort *s)
+{
+	free(s->results);
+	free(s);
+}

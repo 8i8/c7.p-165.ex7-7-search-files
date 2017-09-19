@@ -6,24 +6,59 @@
  */
 #include "search-files.h"
 
+/* Main */
+struct Folio *settings(struct Folio *fx1, int argc, char*argv[]);
+
 int main(int argc, char *argv[])
 {
-	struct Folio folio;
-	struct Folio *f;
-	f = initFolio(&folio);
+	struct Folio *f = NULL;
+	struct Sort *s = NULL;
+	f = init_folio(f);
+	s = init_sort(s);
 
 	if (argc > 1)
 		f = settings(f, argc, argv);
 
-	if (folio.t_files)
+	if (f->t_files)
 		loadfolio(f);
 	else
 		printf("usage:	%s <file1> <file2> ...\n", *argv);
 
-	hashtable(f);
+	hashtable(f, s);
 
 	/* Sort input */
-	sortsection((void*)*lineptr, pt, sizeof(struct Line*), state.func);
+	sortsection((void*)s->results, s->pt, sizeof(struct Line*), state.func);
+
+	//printfolio(f);
+	printhash(s);
+	free_folio(f);
+	free_sort(s);
+
+	return 0;
+}
+
+/*
+ * settings:	If the argument is preceded by '-' it is a flag, program state
+ * is set accordingly else it is either a string or a file, in which case it is
+ * sent to getinput().
+ */
+struct Folio *settings(struct Folio *fx1, int argc, char*argv[])
+{
+	size_t i;
+
+	resetglobals();
+
+	for (i = 1; i < (unsigned)argc; i++)
+		if (*argv[i] == '-')
+			getflags(i, argv);
+
+	getinput(fx1, argc, argv);
+
+	return fx1;
+}
+
+	/* Sort input */
+	//sortsection((void*)*lineptr, pt, sizeof(struct Line*), state.func);
 	//sortsection((void*)folio.linesArray, folio.t_lines, sizeof(struct Line), state.func);
 	
 	/* If required, add line spacers. */
@@ -48,33 +83,4 @@ int main(int argc, char *argv[])
 	//	if (state.directory)
 	//		pt = addspacer(lineptr, MAXLINES, pt, i-1);
 	//}
-
-	printfolio(f);
-	printf("\n");
-	printhash(lineptr, pt);
-
-	freeall(f);
-
-	return 0;
-}
-
-/*
- * settings:	If the argument is preceded by '-' it is a flag, program state
- * is set accordingly else it is either a string or a file, in which case it is
- * sent to getinput().
- */
-struct Folio *settings(struct Folio *fx1, int argc, char*argv[])
-{
-	size_t i;
-
-	resetglobals();
-
-	for (i = 1; i < (unsigned)argc; i++)
-		if (*argv[i] == '-')
-			getflags(i, argv);
-
-	getinput(fx1, argc, argv);
-
-	return fx1;
-}
 
