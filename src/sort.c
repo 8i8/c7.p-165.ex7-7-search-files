@@ -15,15 +15,13 @@ static void swap(void *string, size_t i, size_t j, size_t width);
 static unsigned char* jumptochar(unsigned char *c);
 static unsigned char* jumptotab(unsigned char *c, size_t ntab);
 static int sortfolded(const void *s1, const void *s2);
-//static int numcmp(const void *l1, const void *l2);
-static int strscmp(const void *s, const void *t);
+static int numcmp(const void *l1, const void *l2);
 static int strtcmp(const void *s, const void *t);
 static int sortalpha(const void *s1, const void *s2);
 static int strtcmp(const void *s, const void *t);
 
 /* Function pointers */
-comp strsimp = (int (*)(const void*, const void*)) strscmp;
-//comp strsimp = (int (*)(const void*, const void*)) strtcmp;
+comp strsimp = (int (*)(const void*, const void*)) strtcmp;
 comp stnsort = (int (*)(const void*, const void*)) sortalpha;
 comp strfold = (int (*)(const void*, const void*)) sortfolded;
 
@@ -54,7 +52,6 @@ void sortsection(void *lines, int nel, size_t width, int func)
  */
 void _qsort(void *base, size_t nel, size_t width, int (*fn)(const void*, const void*))
 {
-	void swap(void *string, size_t i, size_t j, size_t width);
 	unsigned char *b = (unsigned char*)base;
 	size_t i, left, last;
 
@@ -309,6 +306,7 @@ static unsigned char* jumptochar(unsigned char *c)
 
 /*
  * jumptotab:	Skip to the n'th tab.
+ * getline
  */
 static unsigned char* jumptotab(unsigned char *c, size_t ntab)
 {
@@ -355,9 +353,9 @@ static int sortalpha(const void *l1, const void *l2)
  */
 static int sortfolded(const void *l1, const void *l2)
 {
-	struct Line *s1, *s2;
+	const struct Line *s1, *s2;
+	s1 = l1, s2 = l2;
 	unsigned char c1, c2;
-	s1 = (struct Line*)l1, s2 = (struct Line*)l2;
 
 	c1 = sortascii((char*)&s1->line[0], true);
 	c2 = sortascii((char*)&s2->line[0], true);
@@ -367,42 +365,33 @@ static int sortfolded(const void *l1, const void *l2)
 /*
  * Compare s1 and s2 numerically.
  */
-//static int numcmp(const void *l1, const void *l2)
-//{
-//	struct Line *s1, *s2;
-//	s1 = (struct Line*)l1, s2 = (struct Line*)l2;
-//
-//	double v1, v2;
-//	v1 = atof((char*)s1->line);
-//	v2 = atof((char*)s2->line);
-//	if (v1 < v2)
-//		return -1;
-//	else if (v1 > v2)
-//		return 1;
-//	return 0;
-//}
+static int numcmp(const void *l1, const void *l2)
+{
+	const struct Line *s1, *s2;
+	s1 = (struct Line*)l1, s2 = (struct Line*)l2;
+
+	double v1, v2;
+	v1 = atof((char*)s1->line);
+	v2 = atof((char*)s2->line);
+	if (v1 < v2)
+		return -1;
+	else if (v1 > v2)
+		return 1;
+	return 0;
+}
 
 /*
  * strtcmp:	String compare that will stop at a tabstop.
  */
 static int strtcmp(const void *s, const void *t)
 {
-	struct Line *u, *v;
-	u = (struct Line*)s, v = (struct Line*)t;
-        for ( ; *u->line == *v->line; u->line++, v->line++)
-                if (*u->line == '\0' || *v->line == '\t')
+	size_t i;
+	const struct Line *u, *v;
+	u = s, v = t;
+        for (i = 0 ; *u->line == *v->line; i++)
+                if (*(u->line+i) == '\0' || *(v->line+i) == '\t')
                         return 0;
         return *u->line - *v->line;
-}
-
-/*
- * strscmp:	tempory wrapper for strcmp.
- */
-int strscmp(const void* v1, const void* v2)
-{
-	const struct Line *s1, *s2;
-	s1 = v1, s2 = v2;
-	return strcmp((const void*)s1->line, (const void*)s2->line);
 }
 
 ///*

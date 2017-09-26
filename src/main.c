@@ -27,10 +27,12 @@ int main(int argc, char *argv[])
 	hashtable(f, s);
 
 	/* Sort input */
-	sortsection((void*)s->results, s->pt, sizeof(struct Line*), state.func);
+	//sortsection((void*)s->results, s->pt, sizeof(struct Line*), state.func);
+	//sortsection((void*)f->lines_array, s->pt, sizeof(struct Line), state.func);
 
-	//printfolio(f);
-	printhash(s);
+	printfolio(f);
+	//printhash(s);
+
 	free_folio(f);
 	free_sort(s);
 
@@ -48,18 +50,20 @@ struct Folio *settings(struct Folio *fx1, int argc, char*argv[])
 
 	resetglobals();
 
-	for (i = 1; i < (unsigned)argc; i++)
-		if (*argv[i] == '-')
-			getflags(i, argv);
+	if (argc > 1)
+		for (i = 1; i < (unsigned)argc; i++)
+			if (*argv[i] == '-')
+				getflags(i, argv);
 
-	getinput(fx1, argc, argv);
+	if (argc > 1)
+		getinput(fx1, argc, argv);
 
 	return fx1;
 }
 
 	/* Sort input */
 	//sortsection((void*)*lineptr, pt, sizeof(struct Line*), state.func);
-	//sortsection((void*)folio.linesArray, folio.t_lines, sizeof(struct Line), state.func);
+	//sortsection((void*)folio.lines_array, folio.t_lines, sizeof(struct Line), state.func);
 	
 	/* If required, add line spacers. */
 	//if (state.directory)

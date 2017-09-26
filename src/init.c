@@ -5,8 +5,7 @@
 
 /* main:	state for program functions */
 struct State state = {
-	//alpha,
-	simple,
+	alpha,
 	false,
 	false,
 	false,
@@ -37,7 +36,7 @@ struct Folio *init_folio(struct Folio *folio)
 	folio = malloc(sizeof(struct Folio));
 	folio->files = NULL;
 	folio->memory = NULL;
-	folio->linesArray = NULL;
+	folio->lines_array = NULL;
 	folio->t_files = 0;
 	folio->t_lines = 0;
 	folio->t_len = 0;
@@ -62,8 +61,8 @@ struct Sort *init_sort(struct Sort *sort)
 struct File init_file(struct File *file, struct Folio *root)
 {
 	file->lines = NULL;
-	file->f_name.name = NULL;
 	file->root = root;
+	file->f_name.name = NULL;
 	file->f_lines = 0;
 	file->f_len = 0;
 	file->flag = 0;
