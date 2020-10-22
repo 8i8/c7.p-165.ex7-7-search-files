@@ -42,7 +42,7 @@ static struct Line *lookup(unsigned char *s)
 }
 
 /*
- * makenode:	Check if the lines hash halready has a node, if it does link to
+ * makenode:	Check if the lines hash already has a node, if it does link to
  * it, if not then start a new branch.
  */
 static struct Sort *makenode(
